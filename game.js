@@ -1,5 +1,5 @@
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import * as THREE from './vendor/three.module.js';
+import { GLTFLoader } from './vendor/GLTFLoader.js';
 
 const canvas = document.getElementById('game');
 const overlay = document.getElementById('overlay');
