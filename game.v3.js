@@ -283,7 +283,7 @@ updateChunks(raven.position.x, raven.position.z);
 
 // pickups
 const shinies = [];
-const shinyGeo = new THREE.IcosahedronGeometry(0.24, 0);
+const shinyGeo = new THREE.IcosahedronGeometry(1.2, 0);
 const shinyMat = new THREE.MeshStandardMaterial({
   color: 0xffdf6a,
   emissive: 0x7a5f19,
@@ -394,7 +394,7 @@ function update(dt, t) {
     s.position.y += Math.sin(t * 2.6 + i * 0.35) * 0.004;
 
     const d = s.position.distanceTo(raven.position);
-    if (d < 1.02) {
+    if (d < 5.1) {
       scene.remove(s);
       shinies.splice(i, 1);
       score += 1;
@@ -411,7 +411,7 @@ function update(dt, t) {
   }
 
   // keep a healthy shiny population around the active area
-  while (shinies.length < 90) spawnShiny();
+  while (shinies.length < 270) spawnShiny();
 }
 
 let last = performance.now();
