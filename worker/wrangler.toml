@@ -4,5 +4,5 @@ compatibility_date = "2026-03-06"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "ravensim-lb"
+database_name = "ravensim"
 database_id = "749a245e-c14a-4b90-8d6d-d300269e009e"
