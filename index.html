@@ -26,7 +26,25 @@
         <br><code>CoPRYLGHc7Qadere13xSPhRvgwwStCZn9dHpBZQ7pump</code>
         <br><a href="https://dexscreener.com/search?q=CoPRYLGHc7Qadere13xSPhRvgwwStCZn9dHpBZQ7pump" target="_blank" rel="noopener noreferrer">Track it on Dexscreener</a>
       </p>
-      <button id="startBtn">Start</button>
+      <div id="signupSection" style="margin-top:14px;border-top:1px solid #2a3a4a;padding-top:14px;">
+        <p style="font-size:12px;color:#7fd0ff;margin:0 0 8px 0;font-weight:bold;">🏆 SHINY HUNT COMPETITION</p>
+        <p style="font-size:11px;color:#b8c3d6;margin:0 0 10px 0;">Top score in 24h wins <strong style="color:#ffe97a;">100,000 $CORVUS</strong> (~$100) sent directly to your wallet. Sign up to compete — or skip to just fly.</p>
+        <div id="signupForm">
+          <input type="text" id="regUsername" placeholder="Username (max 20 chars)" maxlength="20" style="width:100%;padding:5px;margin-bottom:6px;box-sizing:border-box;background:#111;color:#fff;border:1px solid #444;border-radius:4px;">
+          <input type="text" id="regWallet" placeholder="Solana wallet address" style="width:100%;padding:5px;margin-bottom:8px;box-sizing:border-box;background:#111;color:#fff;border:1px solid #444;border-radius:4px;font-size:11px;">
+          <div style="display:flex;gap:6px;">
+            <button id="signupBtn" style="flex:1;padding:7px;background:#1a4d6d;color:#7fd0ff;border:1px solid #7fd0ff;border-radius:4px;cursor:pointer;font-weight:bold;">Sign up & Play</button>
+            <button id="skipSignupBtn" style="flex:1;padding:7px;background:#1a1a1a;color:#888;border:1px solid #444;border-radius:4px;cursor:pointer;">Skip (just fly)</button>
+          </div>
+          <p id="signupStatus" style="font-size:11px;color:#ff6b6b;margin:6px 0 0 0;display:none;"></p>
+        </div>
+        <div id="signedInSection" style="display:none;">
+          <p style="font-size:12px;color:#7fd0ff;margin:0 0 6px 0;">✅ Signed in as <strong id="signedInName"></strong></p>
+          <p style="font-size:11px;color:#888;margin:0 0 8px 0;">Wallet linked. Your best score will be recorded.</p>
+          <button id="startBtn" style="width:100%;padding:8px;background:#1a4d6d;color:#7fd0ff;border:1px solid #7fd0ff;border-radius:4px;cursor:pointer;font-weight:bold;">Start Flying</button>
+        </div>
+      </div>
+      <button id="startBtnNoAuth" style="margin-top:10px;width:100%;display:none;">Start</button>
     </div>
   </div>
 

@@ -3,7 +3,6 @@ import { GLTFLoader } from './vendor/GLTFLoader.v3.js';
 
 const canvas = document.getElementById('game');
 const overlay = document.getElementById('overlay');
-const startBtn = document.getElementById('startBtn');
 const scoreEl = document.getElementById('score');
 const leaderboardBtn = document.getElementById('leaderboardBtn');
 const leaderboardPanel = document.getElementById('leaderboardPanel');
@@ -11,6 +10,81 @@ const leaderboardList = document.getElementById('leaderboardList');
 const playerNameInput = document.getElementById('playerNameInput');
 const saveScoreBtn = document.getElementById('saveScoreBtn');
 const closeLeaderboardBtn = document.getElementById('closeLeaderboardBtn');
+
+// Auth elements
+const regUsername = document.getElementById('regUsername');
+const regWallet = document.getElementById('regWallet');
+const signupBtn = document.getElementById('signupBtn');
+const skipSignupBtn = document.getElementById('skipSignupBtn');
+const signupStatus = document.getElementById('signupStatus');
+const signedInSection = document.getElementById('signedInSection');
+const signedInName = document.getElementById('signedInName');
+const signupForm = document.getElementById('signupForm');
+const startBtnNoAuth = document.getElementById('startBtnNoAuth');
+const startBtnAuth = document.getElementById('startBtn');
+
+let authToken = localStorage.getItem('ravenToken') || null;
+let authUsername = localStorage.getItem('ravenUsername') || null;
+
+function showSignedIn(username) {
+  signupForm.style.display = 'none';
+  signedInSection.style.display = 'block';
+  signedInName.textContent = username;
+}
+
+// Check if already registered
+if (authToken && authUsername) {
+  showSignedIn(authUsername);
+}
+
+signupBtn.addEventListener('click', async () => {
+  const username = regUsername.value.trim();
+  const wallet = regWallet.value.trim();
+  if (!username || !wallet) {
+    signupStatus.textContent = 'Username and wallet are required.';
+    signupStatus.style.display = 'block';
+    return;
+  }
+  signupBtn.textContent = 'Signing up...';
+  signupStatus.style.display = 'none';
+  try {
+    const res = await fetch(`${WORKER_URL}/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, wallet })
+    });
+    const data = await res.json();
+    if (data.error) {
+      signupStatus.textContent = data.error;
+      signupStatus.style.display = 'block';
+      signupBtn.textContent = 'Sign up & Play';
+      return;
+    }
+    authToken = data.token;
+    authUsername = data.username;
+    localStorage.setItem('ravenToken', authToken);
+    localStorage.setItem('ravenUsername', authUsername);
+    showSignedIn(authUsername);
+  } catch (e) {
+    signupStatus.textContent = 'Connection error. Try again.';
+    signupStatus.style.display = 'block';
+    signupBtn.textContent = 'Sign up & Play';
+  }
+});
+
+skipSignupBtn.addEventListener('click', () => {
+  overlay.style.display = 'none';
+  started = true;
+  setPointerLock();
+});
+
+if (startBtnAuth) {
+  startBtnAuth.addEventListener('click', () => {
+    overlay.style.display = 'none';
+    started = true;
+    setPointerLock();
+  });
+}
 
 const WORKER_URL = 'https://ravensim.corvusbackend.dev';
 
@@ -23,12 +97,13 @@ async function fetchLeaderboard() {
   }
 }
 
-async function submitScore(name, score) {
+async function submitScore(score) {
+  if (!authToken) return;
   try {
     await fetch(`${WORKER_URL}/submit`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, score })
+      body: JSON.stringify({ token: authToken, score })
     });
   } catch (e) {
     console.warn('Score submit failed:', e);
@@ -56,16 +131,16 @@ closeLeaderboardBtn.addEventListener('click', () => {
 });
 
 saveScoreBtn.addEventListener('click', async () => {
-  const name = playerNameInput.value.trim() || 'Anonymous';
-  if (score > 0) {
-    saveScoreBtn.textContent = 'Saving...';
-    await submitScore(name, score);
-    playerNameInput.value = '';
-    saveScoreBtn.textContent = 'Save Score';
-    displayLeaderboard();
-  } else {
-    alert('Collect some shinies first!');
+  if (score <= 0) { alert('Collect some shinies first!'); return; }
+  if (!authToken) {
+    alert('Sign up to save your score to the global leaderboard!');
+    return;
   }
+  saveScoreBtn.textContent = 'Saving...';
+  await submitScore(score);
+  saveScoreBtn.textContent = 'Score Saved ✅';
+  setTimeout(() => { saveScoreBtn.textContent = 'Save Score'; }, 2000);
+  displayLeaderboard();
 });
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -395,11 +470,7 @@ document.addEventListener('mousemove', (e) => {
 });
 
 canvas.addEventListener('click', () => started && setPointerLock());
-startBtn.addEventListener('click', () => {
-  overlay.style.display = 'none';
-  started = true;
-  setPointerLock();
-});
+// start handled by signup flow buttons above
 
 function update(dt, t) {
   if (!started) return;
