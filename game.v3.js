@@ -5,6 +5,55 @@ const canvas = document.getElementById('game');
 const overlay = document.getElementById('overlay');
 const startBtn = document.getElementById('startBtn');
 const scoreEl = document.getElementById('score');
+const leaderboardBtn = document.getElementById('leaderboardBtn');
+const leaderboardPanel = document.getElementById('leaderboardPanel');
+const leaderboardList = document.getElementById('leaderboardList');
+const playerNameInput = document.getElementById('playerNameInput');
+const saveScoreBtn = document.getElementById('saveScoreBtn');
+const closeLeaderboardBtn = document.getElementById('closeLeaderboardBtn');
+
+// Leaderboard functions
+function loadLeaderboard() {
+  const stored = localStorage.getItem('ravenSimLeaderboard');
+  return stored ? JSON.parse(stored) : [];
+}
+
+function saveLeaderboard(scores) {
+  localStorage.setItem('ravenSimLeaderboard', JSON.stringify(scores));
+}
+
+function displayLeaderboard() {
+  const scores = loadLeaderboard().sort((a, b) => b.score - a.score).slice(0, 10);
+  leaderboardList.innerHTML = scores.length === 0
+    ? '<p style="color:#999;">No scores yet. Be the first!</p>'
+    : scores.map((s, i) => `<div class="rank-item"><span>${i + 1}. ${s.name}</span><span>${s.score}</span></div>`).join('');
+}
+
+function toggleLeaderboard() {
+  const isHidden = leaderboardPanel.style.display === 'none';
+  leaderboardPanel.style.display = isHidden ? 'block' : 'none';
+  if (isHidden) displayLeaderboard();
+}
+
+leaderboardBtn.addEventListener('click', toggleLeaderboard);
+
+closeLeaderboardBtn.addEventListener('click', () => {
+  leaderboardPanel.style.display = 'none';
+});
+
+saveScoreBtn.addEventListener('click', () => {
+  const name = playerNameInput.value.trim() || 'Anonymous';
+  if (score > 0) {
+    const scores = loadLeaderboard();
+    scores.push({ name, score, date: new Date().toISOString() });
+    saveLeaderboard(scores);
+    playerNameInput.value = '';
+    displayLeaderboard();
+    alert(`Score saved! ${name}: ${score}`);
+  } else {
+    alert('Collect some shinies first!');
+  }
+});
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));

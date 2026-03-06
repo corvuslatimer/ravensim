@@ -43,3 +43,60 @@ button:hover { background: #b2ddff; }
 .card a:hover {
   color: #b8e7ff;
 }
+
+.leaderboard-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #0d1117;
+  border: 2px solid #7fd0ff;
+  border-radius: 8px;
+  padding: 20px;
+  max-width: 400px;
+  width: 90%;
+  z-index: 1000;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+}
+
+.leaderboard-content h2 {
+  color: #7fd0ff;
+  margin: 0 0 15px 0;
+  text-align: center;
+  font-size: 18px;
+}
+
+.leaderboard-content button {
+  background: #1a4d6d;
+  color: #7fd0ff;
+  border: 1px solid #7fd0ff;
+  border-radius: 4px;
+  font-weight: bold;
+  transition: background 0.2s;
+}
+
+.leaderboard-content button:hover {
+  background: #0f3a52;
+}
+
+#leaderboardList {
+  font-size: 12px;
+  color: #b8c3d6;
+  font-family: monospace;
+}
+
+#leaderboardList .rank-item {
+  padding: 4px 0;
+  border-bottom: 1px solid #333;
+  display: flex;
+  justify-content: space-between;
+}
+
+#leaderboardList .rank-item:last-child {
+  border-bottom: none;
+}
+
+#playerNameInput {
+  border-radius: 4px;
+  font-family: monospace;
+}
