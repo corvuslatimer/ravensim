@@ -33,3 +33,13 @@ button {
   color: #081017; background: #9dd3ff; cursor: pointer;
 }
 button:hover { background: #b2ddff; }
+
+.card a {
+  color: #7fd0ff;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.card a:hover {
+  color: #b8e7ff;
+}
