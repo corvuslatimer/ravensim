@@ -16,15 +16,18 @@ export default {
     }
 
     if (url.pathname === '/submit' && request.method === 'POST') {
-      const { name, score } = await request.json();
-      if (!name || typeof score !== 'number' || score < 0 || name.length > 20) {
-        return new Response(JSON.stringify({ error: 'Invalid' }), { status: 400, headers });
+      try {
+        const { name, score } = await request.json();
+        if (!name || typeof score !== 'number' || score < 0 || name.length > 20) {
+          return new Response(JSON.stringify({ error: 'Invalid' }), { status: 400, headers });
+        }
+        await env.DB.prepare(
+          'INSERT INTO scores (name, score, time) VALUES (?, ?, ?)'
+        ).bind(name.slice(0, 20), score, Date.now()).run();
+        return new Response(JSON.stringify({ success: true }), { headers });
+      } catch (e) {
+        return new Response(JSON.stringify({ error: e.message }), { status: 500, headers });
       }
-      await env.DB.prepare(`
-        INSERT INTO scores (name, score, time) VALUES (?, ?, ?)
-        ON CONFLICT(name) DO UPDATE SET score = MAX(score, excluded.score), time = excluded.time
-      `).bind(name.slice(0, 20), score, Date.now()).run();
-      return new Response(JSON.stringify({ success: true }), { headers });
     }
 
     return new Response('Not found', { status: 404 });
