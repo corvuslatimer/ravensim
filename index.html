@@ -57,13 +57,10 @@
     <div>Shiny: <span id="score">0</span></div>
   </div>
 
-  <div id="leaderboardPanel" class="leaderboard-panel">
-    <div class="leaderboard-content">
-      <h2>Leaderboard</h2>
-      <div id="leaderboardList" style="max-height:300px;overflow-y:auto;margin:10px 0;"></div>
-      <button id="saveScoreBtn" style="width:100%;padding:6px;margin:5px 0;cursor:pointer;">Save My Score</button>
-      <button id="closeLeaderboardBtn" style="width:100%;padding:6px;margin:5px 0;cursor:pointer;">Close</button>
-    </div>
+  <div id="leaderboardPanel" style="position:fixed;top:10px;left:10px;background:#0d1117cc;border:1px solid #7fd0ff44;border-radius:8px;padding:12px;min-width:180px;max-width:220px;z-index:100;backdrop-filter:blur(6px);">
+    <div style="color:#7fd0ff;font-size:12px;font-weight:bold;margin-bottom:8px;">🏆 Top Scores</div>
+    <div id="leaderboardList" style="font-size:11px;color:#b8c3d6;font-family:monospace;max-height:200px;overflow-y:auto;"></div>
+    <button id="saveScoreBtn" style="width:100%;padding:5px;margin-top:8px;background:#1a4d6d;color:#7fd0ff;border:1px solid #7fd0ff44;border-radius:4px;cursor:pointer;font-size:11px;">Save My Score</button>
   </div>
 
   <canvas id="game"></canvas>

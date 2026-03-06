@@ -8,7 +8,6 @@ const scoreEl = document.getElementById('score');
 const leaderboardPanel = document.getElementById('leaderboardPanel');
 const leaderboardList = document.getElementById('leaderboardList');
 const saveScoreBtn = document.getElementById('saveScoreBtn');
-const closeLeaderboardBtn = document.getElementById('closeLeaderboardBtn');
 
 // Auth elements
 const regUsername = document.getElementById('regUsername');
@@ -173,10 +172,6 @@ function toggleLeaderboard() {
   leaderboardPanel.style.display = isHidden ? 'block' : 'none';
   if (isHidden) displayLeaderboard();
 }
-
-closeLeaderboardBtn.addEventListener('click', () => {
-  leaderboardPanel.style.display = 'none';
-});
 
 // auto-load leaderboard on page load
 displayLeaderboard();
