@@ -215,10 +215,10 @@ gltfLoader.load(
   (gltf) => {
     ravenPivot.remove(fallbackRaven);
     const model = gltf.scene;
-    model.scale.setScalar(0.012);
+    model.scale.setScalar(0.02);
     model.rotation.y = Math.PI;
     model.rotation.x = -Math.PI / 2;
-    model.rotation.z = 0;
+    model.rotation.z = 50;
     model.traverse((o) => {
       if (o.isMesh) {
         o.castShadow = true;
@@ -336,7 +336,7 @@ function update(dt, t) {
   ravenPivot.rotation.x = flap * 0.04;
   ravenPivot.position.y = flap * 0.08;
 
-  const camOffset = new THREE.Vector3(0, 1.7, -5.4).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
+  const camOffset = new THREE.Vector3(0, 1.35, -3.4).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
   camera.position.lerp(raven.position.clone().add(camOffset), 0.09);
   camTarget.copy(raven.position).add(new THREE.Vector3(Math.sin(yaw), Math.sin(pitch) * 0.75, Math.cos(yaw)).multiplyScalar(18));
   camera.lookAt(camTarget);
