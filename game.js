@@ -74,25 +74,7 @@ scene.add(ground);
 
 const treeMat = new THREE.MeshStandardMaterial({ color: 0x243724, roughness: 1, flatShading: true });
 const trunkMat = new THREE.MeshStandardMaterial({ color: 0x4a3628, roughness: 1, flatShading: true });
-for (let i = 0; i < 220; i++) {
-  const h = 3 + Math.random() * 10;
-  const angle = Math.random() * Math.PI * 2;
-  const dist = 20 + Math.random() * 330;
-  const x = Math.cos(angle) * dist;
-  const z = Math.sin(angle) * dist;
-
-  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.18, h * 0.45, 6), trunkMat);
-  trunk.position.set(x, h * 0.225 - 1.2, z);
-  trunk.castShadow = true;
-  trunk.receiveShadow = true;
-  scene.add(trunk);
-
-  const crown = new THREE.Mesh(new THREE.ConeGeometry(0.8 + h * 0.16, h, 6), treeMat);
-  crown.position.set(x, h * 0.5 - 1.2, z);
-  crown.castShadow = true;
-  crown.receiveShadow = true;
-  scene.add(crown);
-}
+const grassMat = new THREE.MeshStandardMaterial({ color: 0x4f7f43, roughness: 0.96, metalness: 0.0, flatShading: true });
 
 const cloudMat = new THREE.MeshStandardMaterial({ color: 0xe9f1fb, roughness: 0.95, metalness: 0, transparent: true, opacity: 0.75 });
 for (let i = 0; i < 35; i++) {
@@ -122,25 +104,93 @@ for (let i = 0; i < 3; i++) {
   rivers.push(river);
 }
 
-// Grass clumps (instanced for perf)
-const grassMat = new THREE.MeshStandardMaterial({ color: 0x4f7f43, roughness: 0.96, metalness: 0.0, flatShading: true });
-const grassGeo = new THREE.ConeGeometry(0.18, 1.2, 3);
-const grassCount = 1800;
-const grass = new THREE.InstancedMesh(grassGeo, grassMat, grassCount);
-const gObj = new THREE.Object3D();
-for (let i = 0; i < grassCount; i++) {
-  const gx = (Math.random() - 0.5) * 360;
-  const gz = (Math.random() - 0.5) * 360;
-  gObj.position.set(gx, -0.8, gz);
-  gObj.rotation.y = Math.random() * Math.PI;
-  const s = 0.6 + Math.random() * 0.9;
-  gObj.scale.set(1, s, 1);
-  gObj.updateMatrix();
-  grass.setMatrixAt(i, gObj.matrix);
+// Browser-side procedural generation around player
+const chunkSize = 60;
+const chunkRadius = 2;
+const chunkMap = new Map();
+const procGeo = {
+  trunk: new THREE.CylinderGeometry(0.12, 0.18, 1, 6),
+  crown: new THREE.ConeGeometry(1, 1, 6),
+  grass: new THREE.ConeGeometry(0.18, 1.2, 3)
+};
+
+function hash2(x, z) {
+  const s = Math.sin(x * 127.1 + z * 311.7) * 43758.5453123;
+  return s - Math.floor(s);
 }
-grass.castShadow = true;
-grass.receiveShadow = true;
-scene.add(grass);
+
+function makeChunk(cx, cz) {
+  const group = new THREE.Group();
+  group.userData.cx = cx;
+  group.userData.cz = cz;
+  const baseX = cx * chunkSize;
+  const baseZ = cz * chunkSize;
+
+  const treeCount = 8 + Math.floor(hash2(cx, cz) * 10);
+  for (let i = 0; i < treeCount; i++) {
+    const rx = hash2(cx * 19 + i, cz * 7 + i * 13);
+    const rz = hash2(cx * 11 + i * 5, cz * 23 + i * 17);
+    const px = baseX + (rx - 0.5) * chunkSize;
+    const pz = baseZ + (rz - 0.5) * chunkSize;
+    const h = 3 + hash2(cx * 3 + i, cz * 5 + i) * 8;
+
+    const trunk = new THREE.Mesh(procGeo.trunk, trunkMat);
+    trunk.position.set(px, h * 0.225 - 1.2, pz);
+    trunk.scale.y = h * 0.45;
+    trunk.castShadow = true;
+    trunk.receiveShadow = true;
+    group.add(trunk);
+
+    const crown = new THREE.Mesh(procGeo.crown, treeMat);
+    crown.position.set(px, h * 0.5 - 1.2, pz);
+    crown.scale.set(0.8 + h * 0.16, h, 0.8 + h * 0.16);
+    crown.castShadow = true;
+    crown.receiveShadow = true;
+    group.add(crown);
+  }
+
+  const grassCount = 45;
+  for (let i = 0; i < grassCount; i++) {
+    const rx = hash2(cx * 37 + i, cz * 29 + i * 3);
+    const rz = hash2(cx * 41 + i * 7, cz * 31 + i * 11);
+    const px = baseX + (rx - 0.5) * chunkSize;
+    const pz = baseZ + (rz - 0.5) * chunkSize;
+    const g = new THREE.Mesh(procGeo.grass, grassMat);
+    g.position.set(px, -0.8, pz);
+    g.rotation.y = hash2(cx * 2 + i, cz * 9 + i) * Math.PI;
+    const s = 0.6 + hash2(cx + i * 2, cz + i * 3) * 0.9;
+    g.scale.set(1, s, 1);
+    g.castShadow = true;
+    g.receiveShadow = true;
+    group.add(g);
+  }
+
+  scene.add(group);
+  chunkMap.set(`${cx},${cz}`, group);
+}
+
+function updateChunks(px, pz) {
+  const ccx = Math.floor(px / chunkSize);
+  const ccz = Math.floor(pz / chunkSize);
+  const needed = new Set();
+
+  for (let dz = -chunkRadius; dz <= chunkRadius; dz++) {
+    for (let dx = -chunkRadius; dx <= chunkRadius; dx++) {
+      const cx = ccx + dx;
+      const cz = ccz + dz;
+      const key = `${cx},${cz}`;
+      needed.add(key);
+      if (!chunkMap.has(key)) makeChunk(cx, cz);
+    }
+  }
+
+  for (const [key, grp] of chunkMap.entries()) {
+    if (!needed.has(key)) {
+      scene.remove(grp);
+      chunkMap.delete(key);
+    }
+  }
+}
 
 // Stylized raven model (clean silhouette)
 const raven = new THREE.Group();
@@ -202,6 +252,7 @@ raven.traverse((o) => {
   }
 });
 scene.add(raven);
+updateChunks(raven.position.x, raven.position.z);
 
 // pickups
 const shinies = [];
@@ -216,7 +267,9 @@ const shinyMat = new THREE.MeshStandardMaterial({
 
 function spawnShiny() {
   const m = new THREE.Mesh(shinyGeo, shinyMat);
-  m.position.set((Math.random() - 0.5) * 180, 1.8 + Math.random() * 30, (Math.random() - 0.5) * 180);
+  const cx = raven ? raven.position.x : 0;
+  const cz = raven ? raven.position.z : 0;
+  m.position.set(cx + (Math.random() - 0.5) * 180, 1.8 + Math.random() * 30, cz + (Math.random() - 0.5) * 180);
   m.castShadow = true;
   scene.add(m);
   shinies.push(m);
@@ -284,9 +337,9 @@ function update(dt, t) {
   vel.clampLength(0, 18 * boost);
   raven.position.addScaledVector(vel, dt * 5.5);
 
-  raven.position.x = THREE.MathUtils.clamp(raven.position.x, -210, 210);
-  raven.position.z = THREE.MathUtils.clamp(raven.position.z, -210, 210);
   raven.position.y = THREE.MathUtils.clamp(raven.position.y, 1.3, 52);
+
+  updateChunks(raven.position.x, raven.position.z);
 
   // Flight animation / banking
   const flapRate = 13 + vel.length() * 0.4;
