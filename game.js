@@ -11,86 +11,101 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x8fa9c4);
-scene.fog = new THREE.Fog(0x8fa9c4, 35, 180);
+scene.background = new THREE.Color(0x91aeca);
+scene.fog = new THREE.Fog(0x91aeca, 40, 220);
 
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1200);
 camera.position.set(0, 4, 12);
 
-const hemi = new THREE.HemisphereLight(0xbfd8ff, 0x334433, 1.2);
-scene.add(hemi);
-const sun = new THREE.DirectionalLight(0xffffff, 0.7);
-sun.position.set(20, 30, 10);
+scene.add(new THREE.HemisphereLight(0xcbe1ff, 0x2b3c2f, 1.2));
+const sun = new THREE.DirectionalLight(0xffffff, 0.85);
+sun.position.set(30, 45, -10);
 scene.add(sun);
 
-// ground
 const ground = new THREE.Mesh(
-  new THREE.PlaneGeometry(700, 700),
+  new THREE.PlaneGeometry(900, 900, 20, 20),
   new THREE.MeshStandardMaterial({ color: 0x314c3a, roughness: 0.95, metalness: 0.0 })
 );
 ground.rotation.x = -Math.PI / 2;
-ground.position.y = -1;
+ground.position.y = -1.2;
 scene.add(ground);
 
-// simple trees
 const treeMat = new THREE.MeshStandardMaterial({ color: 0x1f2e1f, roughness: 1 });
-for (let i = 0; i < 120; i++) {
-  const h = 2 + Math.random() * 7;
-  const tree = new THREE.Mesh(new THREE.ConeGeometry(0.8 + h * 0.2, h, 6), treeMat);
+for (let i = 0; i < 180; i++) {
+  const h = 3 + Math.random() * 10;
+  const tree = new THREE.Mesh(new THREE.ConeGeometry(0.8 + h * 0.16, h, 6), treeMat);
   const angle = Math.random() * Math.PI * 2;
-  const dist = 20 + Math.random() * 240;
-  tree.position.set(Math.cos(angle) * dist, h * 0.5 - 1, Math.sin(angle) * dist);
+  const dist = 20 + Math.random() * 330;
+  tree.position.set(Math.cos(angle) * dist, h * 0.5 - 1.2, Math.sin(angle) * dist);
   scene.add(tree);
 }
 
-// raven placeholder (low-poly-ish group)
+// Sleek raven model
 const raven = new THREE.Group();
-const body = new THREE.Mesh(
-  new THREE.SphereGeometry(0.7, 12, 10),
-  new THREE.MeshStandardMaterial({ color: 0x101215, roughness: 0.8 })
-);
-body.scale.set(1.4, 0.8, 1);
-raven.add(body);
+const ravenMat = new THREE.MeshStandardMaterial({ color: 0x111317, roughness: 0.82, metalness: 0.03 });
 
-const wingGeo = new THREE.BoxGeometry(1.2, 0.08, 0.5);
-const wingL = new THREE.Mesh(wingGeo, body.material);
-const wingR = new THREE.Mesh(wingGeo, body.material);
-wingL.position.set(-0.9, 0, 0);
-wingR.position.set(0.9, 0, 0);
-raven.add(wingL, wingR);
+const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.34, 1.15, 8, 12), ravenMat);
+torso.rotation.z = Math.PI / 2;
+raven.add(torso);
+
+const head = new THREE.Mesh(new THREE.SphereGeometry(0.24, 12, 10), ravenMat);
+head.position.set(0, 0.08, 0.72);
+raven.add(head);
 
 const beak = new THREE.Mesh(
-  new THREE.ConeGeometry(0.12, 0.45, 5),
-  new THREE.MeshStandardMaterial({ color: 0xcfd5df, roughness: 0.4 })
+  new THREE.ConeGeometry(0.075, 0.42, 6),
+  new THREE.MeshStandardMaterial({ color: 0xd3dae6, roughness: 0.45, metalness: 0.08 })
 );
 beak.rotation.x = Math.PI / 2;
-beak.position.set(0, -0.02, 0.75);
+beak.position.set(0, 0.05, 1.03);
 raven.add(beak);
 
-raven.position.set(0, 4, 0);
+const tail = new THREE.Mesh(new THREE.ConeGeometry(0.17, 0.54, 6), ravenMat);
+tail.rotation.x = -Math.PI / 2;
+tail.position.set(0, 0.0, -0.92);
+raven.add(tail);
+
+const wingGeo = new THREE.BoxGeometry(1.45, 0.04, 0.48);
+const wingL = new THREE.Mesh(wingGeo, ravenMat);
+const wingR = new THREE.Mesh(wingGeo, ravenMat);
+wingL.position.set(-0.88, 0.03, 0.1);
+wingR.position.set(0.88, 0.03, 0.1);
+raven.add(wingL, wingR);
+
+raven.position.set(0, 5, 0);
 scene.add(raven);
 
 // pickups
 const shinies = [];
-const shinyGeo = new THREE.IcosahedronGeometry(0.28, 0);
-const shinyMat = new THREE.MeshStandardMaterial({ color: 0xffdf6a, emissive: 0x8a6d1c, emissiveIntensity: 0.7, metalness: 0.7, roughness: 0.2 });
+const shinyGeo = new THREE.IcosahedronGeometry(0.24, 0);
+const shinyMat = new THREE.MeshStandardMaterial({
+  color: 0xffdf6a,
+  emissive: 0x9a7b1f,
+  emissiveIntensity: 0.85,
+  metalness: 0.72,
+  roughness: 0.2
+});
 
-function spawnShinies(n = 40) {
-  while (shinies.length) scene.remove(shinies.pop());
-  for (let i = 0; i < n; i++) {
-    const m = new THREE.Mesh(shinyGeo, shinyMat);
-    m.position.set((Math.random() - 0.5) * 140, 1.5 + Math.random() * 26, (Math.random() - 0.5) * 140);
-    scene.add(m);
-    shinies.push(m);
-  }
+function spawnShiny() {
+  const m = new THREE.Mesh(shinyGeo, shinyMat);
+  m.position.set((Math.random() - 0.5) * 180, 1.8 + Math.random() * 30, (Math.random() - 0.5) * 180);
+  scene.add(m);
+  shinies.push(m);
 }
-spawnShinies();
+
+function resetShinies(n = 50) {
+  while (shinies.length) scene.remove(shinies.pop());
+  for (let i = 0; i < n; i++) spawnShiny();
+}
+resetShinies();
 
 const keys = new Set();
 let started = false;
 let score = 0;
 let yaw = 0;
 let pitch = -0.08;
+const vel = new THREE.Vector3();
+const camTarget = new THREE.Vector3();
 
 window.addEventListener('keydown', e => keys.add(e.key.toLowerCase()));
 window.addEventListener('keyup', e => keys.delete(e.key.toLowerCase()));
@@ -101,15 +116,12 @@ function setPointerLock() {
 
 document.addEventListener('mousemove', (e) => {
   if (!started || document.pointerLockElement !== canvas) return;
-  yaw -= e.movementX * 0.0022;
-  pitch -= e.movementY * 0.0018;
-  pitch = Math.max(-1.2, Math.min(1.2, pitch));
+  yaw -= e.movementX * 0.0023;
+  pitch -= e.movementY * 0.0019;
+  pitch = Math.max(-1.1, Math.min(1.1, pitch));
 });
 
-canvas.addEventListener('click', () => {
-  if (started) setPointerLock();
-});
-
+canvas.addEventListener('click', () => started && setPointerLock());
 startBtn.addEventListener('click', () => {
   overlay.style.display = 'none';
   started = true;
@@ -119,54 +131,64 @@ startBtn.addEventListener('click', () => {
 function update(dt, t) {
   if (!started) return;
 
-  const boost = keys.has('shift') ? 1.85 : 1;
-  const speed = 12 * boost;
-  const up = (keys.has(' ') ? 1 : 0) - ((keys.has('control') || keys.has('c')) ? 1 : 0);
+  const boost = keys.has('shift') ? 1.8 : 1;
+  const accel = 28 * boost;
+  const damping = 4.0;
 
   const forward = new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw)).normalize();
   const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
-  const move = new THREE.Vector3();
+  const upInput = (keys.has(' ') ? 1 : 0) - ((keys.has('control') || keys.has('c')) ? 1 : 0);
 
-  if (keys.has('w')) move.add(forward);
-  if (keys.has('s')) move.sub(forward);
-  if (keys.has('d')) move.add(right);
-  if (keys.has('a')) move.sub(right);
-  move.y += up;
+  const input = new THREE.Vector3();
+  if (keys.has('w')) input.add(forward);
+  if (keys.has('s')) input.sub(forward);
+  if (keys.has('d')) input.add(right);
+  if (keys.has('a')) input.sub(right);
+  input.y += upInput;
 
-  if (move.lengthSq() > 0) move.normalize().multiplyScalar(speed * dt);
-  raven.position.add(move);
+  if (input.lengthSq() > 0) {
+    input.normalize().multiplyScalar(accel * dt);
+    vel.add(input);
+  }
 
-  // bounds / floor
-  raven.position.x = THREE.MathUtils.clamp(raven.position.x, -180, 180);
-  raven.position.z = THREE.MathUtils.clamp(raven.position.z, -180, 180);
-  raven.position.y = THREE.MathUtils.clamp(raven.position.y, 1.2, 45);
+  vel.multiplyScalar(Math.exp(-damping * dt));
+  vel.clampLength(0, 18 * boost);
+  raven.position.addScaledVector(vel, dt * 5.5);
 
-  // bird animation
-  const flap = Math.sin(t * 16) * 0.7;
+  raven.position.x = THREE.MathUtils.clamp(raven.position.x, -210, 210);
+  raven.position.z = THREE.MathUtils.clamp(raven.position.z, -210, 210);
+  raven.position.y = THREE.MathUtils.clamp(raven.position.y, 1.3, 52);
+
+  // Flight animation / banking
+  const flapRate = 13 + vel.length() * 0.4;
+  const flap = Math.sin(t * flapRate) * 0.62;
   wingL.rotation.z = flap;
   wingR.rotation.z = -flap;
+
+  const sideSpeed = vel.dot(right);
   raven.rotation.y = yaw + Math.PI;
+  raven.rotation.z = THREE.MathUtils.lerp(raven.rotation.z, -sideSpeed * 0.035, 0.12);
+  raven.rotation.x = THREE.MathUtils.lerp(raven.rotation.x, -vel.y * 0.03 + pitch * 0.2, 0.1);
 
-  // camera follow
-  const camOffset = new THREE.Vector3(0, 1.8, -4.8).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
-  camera.position.lerp(raven.position.clone().add(camOffset), 0.12);
-  const lookTarget = raven.position.clone().add(new THREE.Vector3(Math.sin(yaw), Math.sin(pitch) * 0.8, Math.cos(yaw)).multiplyScalar(18));
-  camera.lookAt(lookTarget);
+  const camOffset = new THREE.Vector3(0, 1.7, -5.4).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
+  camera.position.lerp(raven.position.clone().add(camOffset), 0.09);
+  camTarget.copy(raven.position).add(new THREE.Vector3(Math.sin(yaw), Math.sin(pitch) * 0.75, Math.cos(yaw)).multiplyScalar(18));
+  camera.lookAt(camTarget);
 
-  // rotate + collect shinies
   for (let i = shinies.length - 1; i >= 0; i--) {
     const s = shinies[i];
-    s.rotation.y += dt * 2.0;
-    s.position.y += Math.sin(t * 3 + i) * 0.003;
-    if (s.position.distanceTo(raven.position) < 1.2) {
+    s.rotation.y += dt * 2.4;
+    s.rotation.x += dt * 1.2;
+    s.position.y += Math.sin(t * 2.6 + i * 0.35) * 0.004;
+
+    if (s.position.distanceTo(raven.position) < 1.02) {
       scene.remove(s);
       shinies.splice(i, 1);
       score += 1;
       scoreEl.textContent = String(score);
+      spawnShiny();
     }
   }
-
-  if (shinies.length === 0) spawnShinies(55);
 }
 
 let last = performance.now();
