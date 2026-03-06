@@ -17,7 +17,7 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x8ba7c4);
-scene.fog = new THREE.Fog(0x8ba7c4, 45, 260);
+scene.fog = new THREE.Fog(0x8ba7c4, 120, 1800);
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1200);
 camera.position.set(0, 4, 12);
@@ -128,7 +128,7 @@ function updateDynamicEnvironment(px, pz, t) {
 
 // Browser-side procedural generation around player
 const chunkSize = 60;
-const chunkRadius = 2;
+const chunkRadius = 20;
 const chunkMap = new Map();
 const procGeo = {
   trunk: new THREE.CylinderGeometry(0.12, 0.18, 1, 6),
