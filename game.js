@@ -1,176 +1,188 @@
+import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+
 const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
 const overlay = document.getElementById('overlay');
 const startBtn = document.getElementById('startBtn');
+const scoreEl = document.getElementById('score');
 
-const state = {
-  started: false,
-  keys: new Set(),
-  score: 0,
-  cawTimer: 0,
-  t: 0,
-  raven: { x: 300, y: 320, vx: 0, vy: 0, speed: 220 },
-  shinies: []
-};
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
 
-function resize() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x8fa9c4);
+scene.fog = new THREE.Fog(0x8fa9c4, 35, 180);
+
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(0, 4, 12);
+
+const hemi = new THREE.HemisphereLight(0xbfd8ff, 0x334433, 1.2);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffffff, 0.7);
+sun.position.set(20, 30, 10);
+scene.add(sun);
+
+// ground
+const ground = new THREE.Mesh(
+  new THREE.PlaneGeometry(700, 700),
+  new THREE.MeshStandardMaterial({ color: 0x314c3a, roughness: 0.95, metalness: 0.0 })
+);
+ground.rotation.x = -Math.PI / 2;
+ground.position.y = -1;
+scene.add(ground);
+
+// simple trees
+const treeMat = new THREE.MeshStandardMaterial({ color: 0x1f2e1f, roughness: 1 });
+for (let i = 0; i < 120; i++) {
+  const h = 2 + Math.random() * 7;
+  const tree = new THREE.Mesh(new THREE.ConeGeometry(0.8 + h * 0.2, h, 6), treeMat);
+  const angle = Math.random() * Math.PI * 2;
+  const dist = 20 + Math.random() * 240;
+  tree.position.set(Math.cos(angle) * dist, h * 0.5 - 1, Math.sin(angle) * dist);
+  scene.add(tree);
 }
-window.addEventListener('resize', resize);
-resize();
 
-function spawnShinies(n = 12) {
-  state.shinies = [];
+// raven placeholder (low-poly-ish group)
+const raven = new THREE.Group();
+const body = new THREE.Mesh(
+  new THREE.SphereGeometry(0.7, 12, 10),
+  new THREE.MeshStandardMaterial({ color: 0x101215, roughness: 0.8 })
+);
+body.scale.set(1.4, 0.8, 1);
+raven.add(body);
+
+const wingGeo = new THREE.BoxGeometry(1.2, 0.08, 0.5);
+const wingL = new THREE.Mesh(wingGeo, body.material);
+const wingR = new THREE.Mesh(wingGeo, body.material);
+wingL.position.set(-0.9, 0, 0);
+wingR.position.set(0.9, 0, 0);
+raven.add(wingL, wingR);
+
+const beak = new THREE.Mesh(
+  new THREE.ConeGeometry(0.12, 0.45, 5),
+  new THREE.MeshStandardMaterial({ color: 0xcfd5df, roughness: 0.4 })
+);
+beak.rotation.x = Math.PI / 2;
+beak.position.set(0, -0.02, 0.75);
+raven.add(beak);
+
+raven.position.set(0, 4, 0);
+scene.add(raven);
+
+// pickups
+const shinies = [];
+const shinyGeo = new THREE.IcosahedronGeometry(0.28, 0);
+const shinyMat = new THREE.MeshStandardMaterial({ color: 0xffdf6a, emissive: 0x8a6d1c, emissiveIntensity: 0.7, metalness: 0.7, roughness: 0.2 });
+
+function spawnShinies(n = 40) {
+  while (shinies.length) scene.remove(shinies.pop());
   for (let i = 0; i < n; i++) {
-    state.shinies.push({
-      x: Math.random() * (canvas.width - 80) + 40,
-      y: Math.random() * (canvas.height - 160) + 80,
-      r: 6 + Math.random() * 3,
-      tw: Math.random() * Math.PI * 2
-    });
+    const m = new THREE.Mesh(shinyGeo, shinyMat);
+    m.position.set((Math.random() - 0.5) * 140, 1.5 + Math.random() * 26, (Math.random() - 0.5) * 140);
+    scene.add(m);
+    shinies.push(m);
   }
 }
 spawnShinies();
 
-window.addEventListener('keydown', (e) => {
-  state.keys.add(e.key.toLowerCase());
-  if (e.key === ' ') state.cawTimer = 0.25;
+const keys = new Set();
+let started = false;
+let score = 0;
+let yaw = 0;
+let pitch = -0.08;
+
+window.addEventListener('keydown', e => keys.add(e.key.toLowerCase()));
+window.addEventListener('keyup', e => keys.delete(e.key.toLowerCase()));
+
+function setPointerLock() {
+  if (document.pointerLockElement !== canvas) canvas.requestPointerLock();
+}
+
+document.addEventListener('mousemove', (e) => {
+  if (!started || document.pointerLockElement !== canvas) return;
+  yaw -= e.movementX * 0.0022;
+  pitch -= e.movementY * 0.0018;
+  pitch = Math.max(-1.2, Math.min(1.2, pitch));
 });
-window.addEventListener('keyup', (e) => state.keys.delete(e.key.toLowerCase()));
+
+canvas.addEventListener('click', () => {
+  if (started) setPointerLock();
+});
 
 startBtn.addEventListener('click', () => {
   overlay.style.display = 'none';
-  state.started = true;
+  started = true;
+  setPointerLock();
 });
 
-function update(dt) {
-  if (!state.started) return;
-  state.t += dt;
-  state.cawTimer = Math.max(0, state.cawTimer - dt);
+function update(dt, t) {
+  if (!started) return;
 
-  const k = state.keys;
-  const xDir = (k.has('d') || k.has('arrowright') ? 1 : 0) - (k.has('a') || k.has('arrowleft') ? 1 : 0);
-  const yDir = (k.has('s') || k.has('arrowdown') ? 1 : 0) - (k.has('w') || k.has('arrowup') ? 1 : 0);
-  const boost = k.has('shift') ? 1.45 : 1;
+  const boost = keys.has('shift') ? 1.85 : 1;
+  const speed = 12 * boost;
+  const up = (keys.has(' ') ? 1 : 0) - ((keys.has('control') || keys.has('c')) ? 1 : 0);
 
-  state.raven.vx = xDir * state.raven.speed * boost;
-  state.raven.vy = yDir * state.raven.speed * boost;
+  const forward = new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw)).normalize();
+  const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+  const move = new THREE.Vector3();
 
-  state.raven.x += state.raven.vx * dt;
-  state.raven.y += state.raven.vy * dt;
+  if (keys.has('w')) move.add(forward);
+  if (keys.has('s')) move.sub(forward);
+  if (keys.has('d')) move.add(right);
+  if (keys.has('a')) move.sub(right);
+  move.y += up;
 
-  state.raven.x = Math.max(20, Math.min(canvas.width - 20, state.raven.x));
-  state.raven.y = Math.max(20, Math.min(canvas.height - 20, state.raven.y));
+  if (move.lengthSq() > 0) move.normalize().multiplyScalar(speed * dt);
+  raven.position.add(move);
 
-  for (let i = state.shinies.length - 1; i >= 0; i--) {
-    const s = state.shinies[i];
-    s.tw += dt * 6;
-    const dx = s.x - state.raven.x;
-    const dy = s.y - state.raven.y;
-    if (dx * dx + dy * dy < (s.r + 14) ** 2) {
-      state.shinies.splice(i, 1);
-      state.score += 1;
+  // bounds / floor
+  raven.position.x = THREE.MathUtils.clamp(raven.position.x, -180, 180);
+  raven.position.z = THREE.MathUtils.clamp(raven.position.z, -180, 180);
+  raven.position.y = THREE.MathUtils.clamp(raven.position.y, 1.2, 45);
+
+  // bird animation
+  const flap = Math.sin(t * 16) * 0.7;
+  wingL.rotation.z = flap;
+  wingR.rotation.z = -flap;
+  raven.rotation.y = yaw + Math.PI;
+
+  // camera follow
+  const camOffset = new THREE.Vector3(0, 1.8, -4.8).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
+  camera.position.lerp(raven.position.clone().add(camOffset), 0.12);
+  const lookTarget = raven.position.clone().add(new THREE.Vector3(Math.sin(yaw), Math.sin(pitch) * 0.8, Math.cos(yaw)).multiplyScalar(18));
+  camera.lookAt(lookTarget);
+
+  // rotate + collect shinies
+  for (let i = shinies.length - 1; i >= 0; i--) {
+    const s = shinies[i];
+    s.rotation.y += dt * 2.0;
+    s.position.y += Math.sin(t * 3 + i) * 0.003;
+    if (s.position.distanceTo(raven.position) < 1.2) {
+      scene.remove(s);
+      shinies.splice(i, 1);
+      score += 1;
+      scoreEl.textContent = String(score);
     }
   }
 
-  if (state.shinies.length === 0) spawnShinies(14);
-}
-
-function drawBackground() {
-  const g = ctx.createLinearGradient(0, 0, 0, canvas.height);
-  g.addColorStop(0, '#121a2a');
-  g.addColorStop(1, '#1e2e3a');
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  // hills
-  ctx.fillStyle = 'rgba(20,36,40,0.55)';
-  for (let i = 0; i < 4; i++) {
-    const y = canvas.height * (0.72 + i * 0.06);
-    ctx.beginPath();
-    ctx.moveTo(0, canvas.height);
-    for (let x = 0; x <= canvas.width; x += 30) {
-      ctx.lineTo(x, y + Math.sin(x * 0.005 + i + state.t * 0.15) * 10);
-    }
-    ctx.lineTo(canvas.width, canvas.height);
-    ctx.closePath();
-    ctx.fill();
-  }
-}
-
-function drawShinies() {
-  for (const s of state.shinies) {
-    const pulse = 0.6 + 0.4 * Math.sin(s.tw);
-    ctx.beginPath();
-    ctx.arc(s.x, s.y, s.r + pulse, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(255, 226, 120, ${0.5 + pulse * 0.35})`;
-    ctx.fill();
-  }
-}
-
-function drawRaven() {
-  const { x, y } = state.raven;
-  ctx.save();
-  ctx.translate(x, y);
-
-  // body
-  ctx.fillStyle = '#0a0c10';
-  ctx.beginPath();
-  ctx.ellipse(0, 0, 16, 11, 0.1, 0, Math.PI * 2);
-  ctx.fill();
-
-  // wing flap
-  const flap = Math.sin(state.t * 12) * 4;
-  ctx.beginPath();
-  ctx.ellipse(-8, -2, 12, 6 + flap * 0.35, -0.5, 0, Math.PI * 2);
-  ctx.ellipse(8, -2, 12, 6 - flap * 0.35, 0.5, 0, Math.PI * 2);
-  ctx.fill();
-
-  // beak
-  ctx.fillStyle = '#d0d5df';
-  ctx.beginPath();
-  ctx.moveTo(14, -2);
-  ctx.lineTo(23, 0);
-  ctx.lineTo(14, 3);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.restore();
-
-  if (state.cawTimer > 0) {
-    ctx.strokeStyle = `rgba(230,240,255,${state.cawTimer * 2})`;
-    ctx.lineWidth = 2;
-    for (let i = 0; i < 3; i++) {
-      ctx.beginPath();
-      ctx.arc(x + 16, y, 8 + i * 8 + (0.25 - state.cawTimer) * 30, -0.6, 0.6);
-      ctx.stroke();
-    }
-  }
-}
-
-function drawUI() {
-  ctx.fillStyle = 'rgba(0,0,0,0.35)';
-  ctx.fillRect(14, 14, 190, 64);
-  ctx.fillStyle = '#eef4ff';
-  ctx.font = '700 20px Inter, sans-serif';
-  ctx.fillText(`Shiny: ${state.score}`, 24, 41);
-  ctx.font = '500 13px Inter, sans-serif';
-  ctx.fillStyle = '#bcc7d8';
-  ctx.fillText('Raven Simulator v0.1', 24, 62);
+  if (shinies.length === 0) spawnShinies(55);
 }
 
 let last = performance.now();
 function loop(now) {
   const dt = Math.min(0.033, (now - last) / 1000);
   last = now;
+  const t = now / 1000;
 
-  update(dt);
-  drawBackground();
-  drawShinies();
-  drawRaven();
-  drawUI();
-
+  update(dt, t);
+  renderer.render(scene, camera);
   requestAnimationFrame(loop);
 }
-requestAnimationFrame(loop);
+loop(performance.now());
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});

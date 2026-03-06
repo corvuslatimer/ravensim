@@ -9,18 +9,22 @@
 <body>
   <div id="overlay" class="overlay">
     <div class="card">
-      <h1>Raven Simulator</h1>
-      <p>Glide, collect shiny things, and just vibe.</p>
+      <h1>Raven Simulator (3D)</h1>
+      <p>Fly through a mellow world, collect shinies, vibe.</p>
       <ul>
-        <li>WASD / Arrow Keys: move</li>
+        <li>WASD: move</li>
+        <li>Space / Ctrl: up / down</li>
         <li>Shift: glide boost</li>
-        <li>Space: caw</li>
+        <li>Mouse: look around</li>
+        <li>Click: lock cursor + start</li>
       </ul>
       <button id="startBtn">Start</button>
     </div>
   </div>
 
-  <canvas id="game" width="1280" height="720" aria-label="Raven Simulator"></canvas>
-  <script src="game.js"></script>
+  <div id="hud">Shiny: <span id="score">0</span></div>
+  <canvas id="game"></canvas>
+
+  <script type="module" src="game.js"></script>
 </body>
 </html>

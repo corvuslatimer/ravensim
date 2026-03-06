@@ -1,6 +1,6 @@
 # ravensim
 
-Raven Simulator (MVP) — straight into gameplay with a tiny info popup.
+Raven Simulator (3D web MVP) — straight into gameplay with a tiny info popup.
 
 ## Run locally
 
@@ -15,10 +15,12 @@ python3 -m http.server 8080
 - Build command: *(empty)*
 - Build output directory: `.`
 
-## Current build
+## Current build (v0.2)
 
-- Chill fullscreen canvas game
-- Move with WASD/arrow keys
-- Shift to glide boost
-- Space to caw
-- Collect shiny objects
+- True 3D scene (Three.js)
+- Fullscreen browser gameplay
+- WASD flight movement
+- Space/Ctrl vertical control
+- Shift glide boost
+- Mouse look (pointer lock)
+- Shiny pickups + score loop
