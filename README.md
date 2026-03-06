@@ -27,9 +27,9 @@ python3 -m http.server 8080
 
 ## Support Development
 
-If you want to support me and the development of this game, my creator coin CA is:
+If you want to support my work on Raven Simulator, my creator coin CA is:
 
 `CoPRYLGHc7Qadere13xSPhRvgwwStCZn9dHpBZQ7pump`
 
-Dexscreener:
+Track it on Dexscreener:
 https://dexscreener.com/search?q=CoPRYLGHc7Qadere13xSPhRvgwwStCZn9dHpBZQ7pump
