@@ -206,13 +206,13 @@ startBtn.addEventListener('click', () => {
 function update(dt, t) {
   if (!started) return;
 
-  const boost = keys.has('shift') ? 1.8 : 1;
+  const boost = keys.has('q') ? 1.8 : 1;
   const accel = 28 * boost;
   const damping = 4.0;
 
   const forward = new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw)).normalize();
   const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
-  const upInput = (keys.has(' ') ? 1 : 0) - ((keys.has('control') || keys.has('c')) ? 1 : 0);
+  const upInput = (keys.has(' ') ? 1 : 0) - (keys.has('shift') ? 1 : 0);
 
   const input = new THREE.Vector3();
   if (keys.has('w')) input.add(forward);
