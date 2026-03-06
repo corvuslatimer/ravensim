@@ -296,7 +296,9 @@ function spawnShiny() {
   const m = new THREE.Mesh(shinyGeo, shinyMat);
   const cx = raven ? raven.position.x : 0;
   const cz = raven ? raven.position.z : 0;
-  m.position.set(cx + (Math.random() - 0.5) * 180, 1.8 + Math.random() * 30, cz + (Math.random() - 0.5) * 180);
+  const dist = 120 + Math.random() * 420;
+  const ang = Math.random() * Math.PI * 2;
+  m.position.set(cx + Math.cos(ang) * dist, 1.8 + Math.random() * 30, cz + Math.sin(ang) * dist);
   m.castShadow = true;
   scene.add(m);
   shinies.push(m);
@@ -391,14 +393,25 @@ function update(dt, t) {
     s.rotation.x += dt * 1.2;
     s.position.y += Math.sin(t * 2.6 + i * 0.35) * 0.004;
 
-    if (s.position.distanceTo(raven.position) < 1.02) {
+    const d = s.position.distanceTo(raven.position);
+    if (d < 1.02) {
       scene.remove(s);
       shinies.splice(i, 1);
       score += 1;
       scoreEl.textContent = String(score);
       spawnShiny();
+      continue;
+    }
+
+    if (d > 650) {
+      scene.remove(s);
+      shinies.splice(i, 1);
+      spawnShiny();
     }
   }
+
+  // keep a healthy shiny population around the active area
+  while (shinies.length < 90) spawnShiny();
 }
 
 let last = performance.now();
