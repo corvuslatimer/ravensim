@@ -33,8 +33,13 @@
           <input type="text" id="regUsername" placeholder="Username (max 20 chars)" maxlength="20" style="width:100%;padding:5px;margin-bottom:6px;box-sizing:border-box;background:#111;color:#fff;border:1px solid #444;border-radius:4px;">
           <input type="text" id="regWallet" placeholder="Solana wallet address" style="width:100%;padding:5px;margin-bottom:8px;box-sizing:border-box;background:#111;color:#fff;border:1px solid #444;border-radius:4px;font-size:11px;">
           <div style="display:flex;gap:6px;">
-            <button id="signupBtn" style="flex:1;padding:7px;background:#1a4d6d;color:#7fd0ff;border:1px solid #7fd0ff;border-radius:4px;cursor:pointer;font-weight:bold;">Sign up & Play</button>
-            <button id="skipSignupBtn" style="flex:1;padding:7px;background:#1a1a1a;color:#888;border:1px solid #444;border-radius:4px;cursor:pointer;">Skip (just fly)</button>
+            <button id="signupBtn" style="flex:2;padding:7px;background:#1a4d6d;color:#7fd0ff;border:1px solid #7fd0ff;border-radius:4px;cursor:pointer;font-weight:bold;">Sign up & Play</button>
+            <button id="loginBtn" style="flex:1;padding:7px;background:#111;color:#aaa;border:1px solid #555;border-radius:4px;cursor:pointer;">Log in</button>
+            <button id="skipSignupBtn" style="flex:1;padding:7px;background:#1a1a1a;color:#888;border:1px solid #444;border-radius:4px;cursor:pointer;">Skip</button>
+          </div>
+          <div id="loginForm" style="display:none;margin-top:8px;">
+            <input type="text" id="loginTokenInput" placeholder="Paste your login token" style="width:100%;padding:5px;box-sizing:border-box;background:#111;color:#fff;border:1px solid #444;border-radius:4px;font-size:11px;">
+            <button id="loginSubmitBtn" style="width:100%;padding:6px;margin-top:6px;background:#1a4d6d;color:#7fd0ff;border:1px solid #7fd0ff;border-radius:4px;cursor:pointer;font-weight:bold;">Log in</button>
           </div>
           <p id="signupStatus" style="font-size:11px;color:#ff6b6b;margin:6px 0 0 0;display:none;"></p>
         </div>

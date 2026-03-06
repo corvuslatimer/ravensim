@@ -57,6 +57,18 @@ export default {
       }
     }
 
+    // POST /login — token → username
+    if (url.pathname === '/login' && request.method === 'POST') {
+      try {
+        const { token } = await request.json();
+        const user = await env.DB.prepare('SELECT username FROM users WHERE token = ?').bind(token).first();
+        if (!user) return json({ error: 'Invalid token' }, 401);
+        return json({ username: user.username });
+      } catch (e) {
+        return json({ error: e.message }, 500);
+      }
+    }
+
     // POST /submit — token + score → save
     if (url.pathname === '/submit' && request.method === 'POST') {
       try {

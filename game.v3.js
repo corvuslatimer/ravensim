@@ -19,6 +19,10 @@ const signupStatus = document.getElementById('signupStatus');
 const signedInSection = document.getElementById('signedInSection');
 const signedInName = document.getElementById('signedInName');
 const signupForm = document.getElementById('signupForm');
+const loginBtn = document.getElementById('loginBtn');
+const loginForm = document.getElementById('loginForm');
+const loginTokenInput = document.getElementById('loginTokenInput');
+const loginSubmitBtn = document.getElementById('loginSubmitBtn');
 const startBtnNoAuth = document.getElementById('startBtnNoAuth');
 const startBtnAuth = document.getElementById('startBtn');
 
@@ -80,6 +84,41 @@ signupBtn.addEventListener('click', async () => {
     signupStatus.textContent = 'Connection error. Try again.';
     signupStatus.style.display = 'block';
     signupBtn.textContent = 'Sign up & Play';
+  }
+});
+
+loginBtn.addEventListener('click', () => {
+  loginForm.style.display = loginForm.style.display === 'none' ? 'block' : 'none';
+});
+
+loginSubmitBtn.addEventListener('click', async () => {
+  const token = loginTokenInput.value.trim();
+  if (!token) return;
+  loginSubmitBtn.textContent = 'Logging in...';
+  try {
+    const res = await fetch(`${WORKER_URL}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token })
+    });
+    const data = await res.json();
+    if (data.error) {
+      signupStatus.textContent = 'Invalid token.';
+      signupStatus.style.color = '#ff6b6b';
+      signupStatus.style.display = 'block';
+      loginSubmitBtn.textContent = 'Log in';
+      return;
+    }
+    authToken = token;
+    authUsername = data.username;
+    localStorage.setItem('ravenToken', authToken);
+    localStorage.setItem('ravenUsername', authUsername);
+    showSignedIn(authUsername);
+  } catch (e) {
+    signupStatus.textContent = 'Connection error.';
+    signupStatus.style.color = '#ff6b6b';
+    signupStatus.style.display = 'block';
+    loginSubmitBtn.textContent = 'Log in';
   }
 });
 
