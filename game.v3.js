@@ -7,7 +7,7 @@ const scoreEl = document.getElementById('score');
 
 const leaderboardPanel = document.getElementById('leaderboardPanel');
 const leaderboardList = document.getElementById('leaderboardList');
-const saveScoreBtn = document.getElementById('saveScoreBtn');
+
 
 // Auth elements
 const regUsername = document.getElementById('regUsername');
@@ -181,18 +181,25 @@ function toggleLeaderboard() {
 // auto-load leaderboard on page load
 displayLeaderboard();
 
-saveScoreBtn.addEventListener('click', async () => {
-  if (score <= 0) { alert('Collect some shinies first!'); return; }
-  if (!authToken) {
-    alert('Sign up to save your score to the global leaderboard!');
-    return;
+let bestSubmittedScore = 0;
+let lastAutoSubmitAt = 0;
+
+async function autoSubmitIfNeeded(currentScore) {
+  if (!authToken) return;
+  if (currentScore <= bestSubmittedScore) return;
+
+  const now = Date.now();
+  if (now - lastAutoSubmitAt < 1500) return; // throttle requests
+
+  lastAutoSubmitAt = now;
+  await submitScore(currentScore);
+  bestSubmittedScore = currentScore;
+
+  // refresh board occasionally after autosave
+  if (currentScore % 3 === 0) {
+    displayLeaderboard();
   }
-  saveScoreBtn.textContent = 'Saving...';
-  await submitScore(score);
-  saveScoreBtn.textContent = 'Score Saved ✅';
-  setTimeout(() => { saveScoreBtn.textContent = 'Save Score'; }, 2000);
-  displayLeaderboard();
-});
+}
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -583,6 +590,7 @@ function update(dt, t) {
       shinies.splice(i, 1);
       score += 1;
       scoreEl.textContent = String(score);
+      autoSubmitIfNeeded(score);
       spawnShiny();
       continue;
     }
