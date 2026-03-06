@@ -63,7 +63,19 @@ signupBtn.addEventListener('click', async () => {
     authUsername = data.username;
     localStorage.setItem('ravenToken', authToken);
     localStorage.setItem('ravenUsername', authUsername);
-    showSignedIn(authUsername);
+
+    if (!data.returning) {
+      signupStatus.style.color = '#7fd0ff';
+      signupStatus.innerHTML = `
+        ✅ Registered! Save your login token:<br>
+        <code style="display:block;background:#111;padding:6px;border-radius:4px;margin:6px 0;font-size:10px;word-break:break-all;user-select:all;">${data.token}</code>
+        <span style="font-size:10px;color:#888;">Copy and store this — use it to log back in from any device.<br>It's also saved in your browser automatically.</span>
+      `;
+      signupStatus.style.display = 'block';
+      setTimeout(() => showSignedIn(authUsername), 5000);
+    } else {
+      showSignedIn(authUsername);
+    }
   } catch (e) {
     signupStatus.textContent = 'Connection error. Try again.';
     signupStatus.style.display = 'block';
