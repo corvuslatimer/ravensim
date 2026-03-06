@@ -40,36 +40,55 @@ for (let i = 0; i < 180; i++) {
   scene.add(tree);
 }
 
-// Sleek raven model
+// Low-poly raven model (non-pill edition)
 const raven = new THREE.Group();
-const ravenMat = new THREE.MeshStandardMaterial({ color: 0x111317, roughness: 0.82, metalness: 0.03 });
+const ravenMat = new THREE.MeshStandardMaterial({ color: 0x111317, roughness: 0.82, metalness: 0.03, flatShading: true });
 
-const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.34, 1.15, 8, 12), ravenMat);
-torso.rotation.z = Math.PI / 2;
+const torso = new THREE.Mesh(new THREE.OctahedronGeometry(0.45, 1), ravenMat);
+torso.scale.set(1.0, 0.78, 1.45);
+torso.rotation.x = 0.18;
 raven.add(torso);
 
-const head = new THREE.Mesh(new THREE.SphereGeometry(0.24, 12, 10), ravenMat);
-head.position.set(0, 0.08, 0.72);
+const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.13, 0.32, 6), ravenMat);
+neck.position.set(0, 0.12, 0.52);
+neck.rotation.x = 0.35;
+raven.add(neck);
+
+const head = new THREE.Mesh(new THREE.OctahedronGeometry(0.22, 0), ravenMat);
+head.position.set(0, 0.23, 0.8);
+head.scale.set(1.0, 0.9, 1.15);
 raven.add(head);
 
 const beak = new THREE.Mesh(
-  new THREE.ConeGeometry(0.075, 0.42, 6),
-  new THREE.MeshStandardMaterial({ color: 0xd3dae6, roughness: 0.45, metalness: 0.08 })
+  new THREE.ConeGeometry(0.07, 0.36, 5),
+  new THREE.MeshStandardMaterial({ color: 0xd3dae6, roughness: 0.45, metalness: 0.08, flatShading: true })
 );
 beak.rotation.x = Math.PI / 2;
-beak.position.set(0, 0.05, 1.03);
+beak.position.set(0, 0.2, 1.06);
 raven.add(beak);
 
-const tail = new THREE.Mesh(new THREE.ConeGeometry(0.17, 0.54, 6), ravenMat);
+const tail = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.68, 5), ravenMat);
 tail.rotation.x = -Math.PI / 2;
-tail.position.set(0, 0.0, -0.92);
+tail.position.set(0, -0.03, -0.96);
+tail.scale.set(1.1, 1, 0.8);
 raven.add(tail);
 
-const wingGeo = new THREE.BoxGeometry(1.45, 0.04, 0.48);
+// pointed wings (triangular look)
+const wingShape = new THREE.Shape();
+wingShape.moveTo(0, 0);
+wingShape.lineTo(1.35, 0.08);
+wingShape.lineTo(0.25, 0.4);
+wingShape.lineTo(0, 0.14);
+wingShape.closePath();
+const wingGeo = new THREE.ExtrudeGeometry(wingShape, { depth: 0.03, bevelEnabled: false });
 const wingL = new THREE.Mesh(wingGeo, ravenMat);
 const wingR = new THREE.Mesh(wingGeo, ravenMat);
-wingL.position.set(-0.88, 0.03, 0.1);
-wingR.position.set(0.88, 0.03, 0.1);
+wingL.position.set(-0.16, 0.02, 0.1);
+wingL.rotation.y = Math.PI;
+wingL.rotation.z = 0.18;
+wingR.position.set(0.16, 0.02, 0.1);
+wingR.rotation.z = -0.18;
+wingR.scale.x = -1;
 raven.add(wingL, wingR);
 
 raven.position.set(0, 5, 0);
@@ -162,8 +181,8 @@ function update(dt, t) {
   // Flight animation / banking
   const flapRate = 13 + vel.length() * 0.4;
   const flap = Math.sin(t * flapRate) * 0.62;
-  wingL.rotation.z = flap;
-  wingR.rotation.z = -flap;
+  wingL.rotation.z = 0.18 + flap;
+  wingR.rotation.z = -0.18 - flap;
 
   const sideSpeed = vel.dot(right);
   raven.rotation.y = yaw + Math.PI;
