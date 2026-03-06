@@ -7,7 +7,6 @@ const scoreEl = document.getElementById('score');
 
 const leaderboardPanel = document.getElementById('leaderboardPanel');
 const leaderboardList = document.getElementById('leaderboardList');
-const playerNameInput = document.getElementById('playerNameInput');
 const saveScoreBtn = document.getElementById('saveScoreBtn');
 const closeLeaderboardBtn = document.getElementById('closeLeaderboardBtn');
 
