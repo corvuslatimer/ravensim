@@ -1,4 +1,5 @@
 import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+import { GLTFLoader } from 'https://unpkg.com/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
 
 const canvas = document.getElementById('game');
 const overlay = document.getElementById('overlay');
@@ -192,66 +193,47 @@ function updateChunks(px, pz) {
   }
 }
 
-// Stylized raven model (clean silhouette)
+// Raven actor + model loader
 const raven = new THREE.Group();
-const ravenMat = new THREE.MeshStandardMaterial({ color: 0x121419, roughness: 0.86, metalness: 0.02, flatShading: true });
-
-const torso = new THREE.Mesh(new THREE.SphereGeometry(0.42, 10, 8), ravenMat);
-torso.scale.set(1.25, 0.75, 1.95);
-torso.position.set(0, 0.02, 0.02);
-raven.add(torso);
-
-const chest = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 8), ravenMat);
-chest.scale.set(1.0, 0.85, 0.95);
-chest.position.set(0, -0.02, 0.52);
-raven.add(chest);
-
-const head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 10, 8), ravenMat);
-head.scale.set(1.0, 0.92, 1.12);
-head.position.set(0, 0.16, 0.98);
-raven.add(head);
-
-const beak = new THREE.Mesh(
-  new THREE.ConeGeometry(0.065, 0.35, 5),
-  new THREE.MeshStandardMaterial({ color: 0xd3dae6, roughness: 0.45, metalness: 0.08, flatShading: true })
-);
-beak.rotation.x = Math.PI / 2;
-beak.position.set(0, 0.14, 1.24);
-raven.add(beak);
-
-const eyeMat = new THREE.MeshStandardMaterial({ color: 0x1f2430, roughness: 0.2, metalness: 0.05 });
-const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 8), eyeMat);
-const eyeR = eyeL.clone();
-eyeL.position.set(-0.09, 0.2, 1.08);
-eyeR.position.set(0.09, 0.2, 1.08);
-raven.add(eyeL, eyeR);
-
-const tail = new THREE.Mesh(new THREE.ConeGeometry(0.17, 0.7, 4), ravenMat);
-tail.rotation.x = -Math.PI / 2;
-tail.position.set(0, 0.0, -1.02);
-tail.scale.set(1.4, 1, 0.75);
-raven.add(tail);
-
-// tapered wings
-const wingGeo = new THREE.ConeGeometry(0.16, 1.7, 4);
-const wingL = new THREE.Mesh(wingGeo, ravenMat);
-const wingR = new THREE.Mesh(wingGeo, ravenMat);
-wingL.position.set(-0.52, 0.04, 0.14);
-wingR.position.set(0.52, 0.04, 0.14);
-wingL.rotation.z = Math.PI / 2;
-wingR.rotation.z = -Math.PI / 2;
-wingL.rotation.y = -0.35;
-wingR.rotation.y = 0.35;
-raven.add(wingL, wingR);
-
 raven.position.set(0, 5, 0);
-raven.traverse((o) => {
-  if (o.isMesh) {
-    o.castShadow = true;
-    o.receiveShadow = true;
-  }
-});
 scene.add(raven);
+
+const ravenPivot = new THREE.Group();
+raven.add(ravenPivot);
+
+// tiny fallback mesh while GLB loads
+const fallbackRaven = new THREE.Mesh(
+  new THREE.ConeGeometry(0.22, 0.9, 5),
+  new THREE.MeshStandardMaterial({ color: 0x14171d, roughness: 0.85, metalness: 0.02, flatShading: true })
+);
+fallbackRaven.rotation.x = Math.PI / 2;
+ravenPivot.add(fallbackRaven);
+
+const gltfLoader = new GLTFLoader();
+gltfLoader.load(
+  './assets/Bird_1_by_get3dmodels.glb',
+  (gltf) => {
+    ravenPivot.remove(fallbackRaven);
+    const model = gltf.scene;
+    model.scale.setScalar(0.012);
+    model.rotation.y = Math.PI;
+    model.traverse((o) => {
+      if (o.isMesh) {
+        o.castShadow = true;
+        o.receiveShadow = true;
+        if (!o.material) {
+          o.material = new THREE.MeshStandardMaterial({ color: 0x121419, roughness: 0.86, metalness: 0.02 });
+        }
+      }
+    });
+    ravenPivot.add(model);
+  },
+  undefined,
+  () => {
+    // keep fallback if load fails
+  }
+);
+
 updateChunks(raven.position.x, raven.position.z);
 
 // pickups
@@ -343,14 +325,14 @@ function update(dt, t) {
 
   // Flight animation / banking
   const flapRate = 13 + vel.length() * 0.4;
-  const flap = Math.sin(t * flapRate) * 0.62;
-  wingL.rotation.z = Math.PI / 2 + flap;
-  wingR.rotation.z = -Math.PI / 2 - flap;
+  const flap = Math.sin(t * flapRate);
 
   const sideSpeed = vel.dot(right);
   raven.rotation.y = yaw;
   raven.rotation.z = THREE.MathUtils.lerp(raven.rotation.z, -sideSpeed * 0.035, 0.12);
   raven.rotation.x = THREE.MathUtils.lerp(raven.rotation.x, -vel.y * 0.03 + pitch * 0.2, 0.1);
+  ravenPivot.rotation.x = flap * 0.04;
+  ravenPivot.position.y = flap * 0.08;
 
   const camOffset = new THREE.Vector3(0, 1.7, -5.4).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
   camera.position.lerp(raven.position.clone().add(camOffset), 0.09);
