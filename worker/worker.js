@@ -111,13 +111,22 @@ export default {
         const { results } = await env.DB.prepare(
           'SELECT username, wallet, score, time FROM scores ORDER BY score DESC LIMIT 50'
         ).all();
-        // truncate wallet for display
-        const display = results.map(r => ({
-          username: r.username,
-          wallet: r.wallet.slice(0, 4) + '...' + r.wallet.slice(-4),
-          score: r.score,
-          time: r.time
-        }));
+
+        const safeResults = Array.isArray(results) ? results : [];
+        const display = safeResults.map((r) => {
+          const wallet = typeof r.wallet === 'string' ? r.wallet : '';
+          const shortWallet = wallet.length >= 8
+            ? `${wallet.slice(0, 4)}...${wallet.slice(-4)}`
+            : wallet || 'unknown';
+
+          return {
+            username: typeof r.username === 'string' ? r.username : 'unknown',
+            wallet: shortWallet,
+            score: Number.isFinite(r.score) ? r.score : 0,
+            time: Number.isFinite(r.time) ? r.time : 0
+          };
+        });
+
         return json(display);
       } catch (e) {
         return json({ error: e.message }, 500);

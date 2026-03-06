@@ -140,7 +140,8 @@ const WORKER_URL = 'https://ravensim.corvusbackend.dev';
 async function fetchLeaderboard() {
   try {
     const res = await fetch(`${WORKER_URL}/leaderboard`);
-    return await res.json();
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
   } catch {
     return [];
   }
@@ -164,7 +165,11 @@ async function displayLeaderboard() {
   const scores = await fetchLeaderboard();
   leaderboardList.innerHTML = scores.length === 0
     ? '<p style="color:#999;">No scores yet. Be the first!</p>'
-    : scores.map((s, i) => `<div class="rank-item"><span>${i + 1}. ${s.name}</span><span>${s.score}</span></div>`).join('');
+    : scores.map((s, i) => {
+        const displayName = s.username || s.name || 'unknown';
+        const displayScore = Number.isFinite(s.score) ? s.score : 0;
+        return `<div class="rank-item"><span>${i + 1}. ${displayName}</span><span>${displayScore}</span></div>`;
+      }).join('');
 }
 
 function toggleLeaderboard() {
