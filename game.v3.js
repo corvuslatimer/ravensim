@@ -4,7 +4,7 @@ import { GLTFLoader } from './vendor/GLTFLoader.v3.js';
 const canvas = document.getElementById('game');
 const overlay = document.getElementById('overlay');
 const scoreEl = document.getElementById('score');
-const leaderboardBtn = document.getElementById('leaderboardBtn');
+
 const leaderboardPanel = document.getElementById('leaderboardPanel');
 const leaderboardList = document.getElementById('leaderboardList');
 const playerNameInput = document.getElementById('playerNameInput');
@@ -124,11 +124,12 @@ function toggleLeaderboard() {
   if (isHidden) displayLeaderboard();
 }
 
-leaderboardBtn.addEventListener('click', toggleLeaderboard);
-
 closeLeaderboardBtn.addEventListener('click', () => {
   leaderboardPanel.style.display = 'none';
 });
+
+// auto-load leaderboard on page load
+displayLeaderboard();
 
 saveScoreBtn.addEventListener('click', async () => {
   if (score <= 0) { alert('Collect some shinies first!'); return; }
