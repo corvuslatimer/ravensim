@@ -24,3 +24,12 @@ python3 -m http.server 8080
 - Shift glide boost
 - Mouse look (pointer lock)
 - Shiny pickups + score loop
+
+## Support Development
+
+If you want to support me and the development of this game, my creator coin CA is:
+
+`CoPRYLGHc7Qadere13xSPhRvgwwStCZn9dHpBZQ7pump`
+
+Dexscreener:
+https://dexscreener.com/search?q=CoPRYLGHc7Qadere13xSPhRvgwwStCZn9dHpBZQ7pump
