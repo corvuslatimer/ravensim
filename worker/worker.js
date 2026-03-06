@@ -44,6 +44,33 @@ function parseScore(raw) {
   return score;
 }
 
+let scoresNameColumnCache = null;
+
+async function getScoresNameColumn(env) {
+  if (scoresNameColumnCache) return scoresNameColumnCache;
+
+  try {
+    const { results } = await env.DB.prepare("PRAGMA table_info(scores)").all();
+    const cols = Array.isArray(results) ? results.map((r) => String(r.name || '').toLowerCase()) : [];
+
+    if (cols.includes('username')) {
+      scoresNameColumnCache = 'username';
+      return scoresNameColumnCache;
+    }
+
+    if (cols.includes('name')) {
+      scoresNameColumnCache = 'name';
+      return scoresNameColumnCache;
+    }
+  } catch {
+    // fall through to default
+  }
+
+  // Default guess for newer schema
+  scoresNameColumnCache = 'username';
+  return scoresNameColumnCache;
+}
+
 async function safeJsonBody(request) {
   const contentType = request.headers.get('content-type') || '';
   if (!contentType.toLowerCase().includes('application/json')) {
@@ -165,18 +192,18 @@ export default {
         if (existing && Number.isFinite(existing.score)) {
           if (score > existing.score) {
             await env.DB.prepare(
-              'UPDATE scores SET score = ?, time = ?, username = ? WHERE wallet = ?'
-            ).bind(score, Date.now(), username, wallet).run();
+              'UPDATE scores SET score = ?, time = ?, username = ?, name = ? WHERE wallet = ?'
+            ).bind(score, Date.now(), username, username, wallet).run();
           }
         } else if (!existing) {
           await env.DB.prepare(
-            'INSERT INTO scores (wallet, username, score, time) VALUES (?, ?, ?, ?)'
-          ).bind(wallet, username, score, Date.now()).run();
+            'INSERT INTO scores (wallet, username, name, score, time) VALUES (?, ?, ?, ?, ?)'
+          ).bind(wallet, username, username, score, Date.now()).run();
         } else {
           // Existing row is malformed; repair it.
           await env.DB.prepare(
-            'UPDATE scores SET score = ?, time = ?, username = ? WHERE wallet = ?'
-          ).bind(score, Date.now(), username, wallet).run();
+            'UPDATE scores SET score = ?, time = ?, username = ?, name = ? WHERE wallet = ?'
+          ).bind(score, Date.now(), username, username, wallet).run();
         }
 
         return json({ success: true });
@@ -189,7 +216,7 @@ export default {
     if (url.pathname === '/leaderboard' && request.method === 'GET') {
       try {
         const { results } = await env.DB.prepare(
-          'SELECT username, wallet, score, time FROM scores ORDER BY score DESC LIMIT 50'
+          'SELECT COALESCE(username, name) AS username, wallet, score, time FROM scores ORDER BY score DESC LIMIT 50'
         ).all();
 
         const safeResults = Array.isArray(results) ? results : [];
