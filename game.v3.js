@@ -217,6 +217,8 @@ gltfLoader.load(
     const model = gltf.scene;
     model.scale.setScalar(0.012);
     model.rotation.y = Math.PI;
+    model.rotation.x = -Math.PI / 2;
+    model.rotation.z = Math.PI;
     model.traverse((o) => {
       if (o.isMesh) {
         o.castShadow = true;
