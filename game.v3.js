@@ -12,18 +12,32 @@ const playerNameInput = document.getElementById('playerNameInput');
 const saveScoreBtn = document.getElementById('saveScoreBtn');
 const closeLeaderboardBtn = document.getElementById('closeLeaderboardBtn');
 
-// Leaderboard functions
-function loadLeaderboard() {
-  const stored = localStorage.getItem('ravenSimLeaderboard');
-  return stored ? JSON.parse(stored) : [];
+const WORKER_URL = 'https://ravensim.corvusbackend.dev';
+
+async function fetchLeaderboard() {
+  try {
+    const res = await fetch(`${WORKER_URL}/leaderboard`);
+    return await res.json();
+  } catch {
+    return [];
+  }
 }
 
-function saveLeaderboard(scores) {
-  localStorage.setItem('ravenSimLeaderboard', JSON.stringify(scores));
+async function submitScore(name, score) {
+  try {
+    await fetch(`${WORKER_URL}/submit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, score })
+    });
+  } catch (e) {
+    console.warn('Score submit failed:', e);
+  }
 }
 
-function displayLeaderboard() {
-  const scores = loadLeaderboard().sort((a, b) => b.score - a.score).slice(0, 10);
+async function displayLeaderboard() {
+  leaderboardList.innerHTML = '<p style="color:#999;">Loading...</p>';
+  const scores = await fetchLeaderboard();
   leaderboardList.innerHTML = scores.length === 0
     ? '<p style="color:#999;">No scores yet. Be the first!</p>'
     : scores.map((s, i) => `<div class="rank-item"><span>${i + 1}. ${s.name}</span><span>${s.score}</span></div>`).join('');
@@ -41,15 +55,14 @@ closeLeaderboardBtn.addEventListener('click', () => {
   leaderboardPanel.style.display = 'none';
 });
 
-saveScoreBtn.addEventListener('click', () => {
+saveScoreBtn.addEventListener('click', async () => {
   const name = playerNameInput.value.trim() || 'Anonymous';
   if (score > 0) {
-    const scores = loadLeaderboard();
-    scores.push({ name, score, date: new Date().toISOString() });
-    saveLeaderboard(scores);
+    saveScoreBtn.textContent = 'Saving...';
+    await submitScore(name, score);
     playerNameInput.value = '';
+    saveScoreBtn.textContent = 'Save Score';
     displayLeaderboard();
-    alert(`Score saved! ${name}: ${score}`);
   } else {
     alert('Collect some shinies first!');
   }
