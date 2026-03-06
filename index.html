@@ -11,6 +11,7 @@
     <div class="card">
       <h1>Raven Simulator (3D)</h1>
       <p>Fly through a mellow world, collect shinies, vibe.</p>
+
       <ul>
         <li>WASD: move</li>
         <li>Space / Shift: up / down</li>
@@ -18,38 +19,48 @@
         <li>Mouse: look around</li>
         <li>Click: lock cursor + start</li>
       </ul>
-      <p style="margin-top:10px;font-size:13px;line-height:1.4;color:#b8c3d6;">
-        Source code: <a href="https://github.com/corvuslatimer/ravensim" target="_blank" rel="noopener noreferrer">github.com/corvuslatimer/ravensim</a>
+
+      <p>
+        Source code:
+        <a href="https://github.com/corvuslatimer/ravensim" target="_blank" rel="noopener noreferrer">github.com/corvuslatimer/ravensim</a>
       </p>
-      <p style="margin-top:10px;font-size:13px;line-height:1.4;color:#b8c3d6;">
+
+      <p>
         If you want to support my work on Raven Simulator, my creator coin CA is:
         <br><code>CoPRYLGHc7Qadere13xSPhRvgwwStCZn9dHpBZQ7pump</code>
         <br><a href="https://dexscreener.com/search?q=CoPRYLGHc7Qadere13xSPhRvgwwStCZn9dHpBZQ7pump" target="_blank" rel="noopener noreferrer">Track it on Dexscreener</a>
       </p>
-      <div id="signupSection" style="margin-top:14px;border-top:1px solid #2a3a4a;padding-top:14px;">
-        <p style="font-size:12px;color:#7fd0ff;margin:0 0 8px 0;font-weight:bold;">🏆 SHINY HUNT COMPETITION</p>
-        <p style="font-size:11px;color:#b8c3d6;margin:0 0 10px 0;">Top score in 24h wins <strong style="color:#ffe97a;">100,000 $CORVUS</strong> (~$100) sent directly to your wallet. Sign up to compete — or skip to just fly.</p>
+
+      <div id="signupSection" class="signup-section">
+        <p class="comp-title">🏆 SHINY HUNT COMPETITION</p>
+        <p class="comp-copy">Top score in 24h wins <strong>100,000 $CORVUS</strong> (~$100) sent directly to your wallet. Sign up to compete — or skip to just fly.</p>
+
         <div id="signupForm">
-          <input type="text" id="regUsername" placeholder="Username (max 20 chars)" maxlength="20" style="width:100%;padding:5px;margin-bottom:6px;box-sizing:border-box;background:#111;color:#fff;border:1px solid #444;border-radius:4px;">
-          <input type="text" id="regWallet" placeholder="Solana wallet address" style="width:100%;padding:5px;margin-bottom:8px;box-sizing:border-box;background:#111;color:#fff;border:1px solid #444;border-radius:4px;font-size:11px;">
-          <div style="display:flex;gap:6px;">
-            <button id="signupBtn" style="flex:2;padding:7px;background:#1a4d6d;color:#7fd0ff;border:1px solid #7fd0ff;border-radius:4px;cursor:pointer;font-weight:bold;">Sign up & Play</button>
-            <button id="loginBtn" style="flex:1;padding:7px;background:#111;color:#aaa;border:1px solid #555;border-radius:4px;cursor:pointer;">Log in</button>
-            <button id="skipSignupBtn" style="flex:1;padding:7px;background:#1a1a1a;color:#888;border:1px solid #444;border-radius:4px;cursor:pointer;">Skip</button>
+          <input type="text" id="regUsername" class="input" placeholder="Username (max 20 chars)" maxlength="20" />
+          <input type="text" id="regWallet" class="input" placeholder="Solana wallet address" />
+
+          <div class="actions-row">
+            <button id="signupBtn">Sign up &amp; Play</button>
+            <button id="loginBtn" class="btn-muted">Log in</button>
+            <button id="skipSignupBtn" class="btn-subtle">Skip</button>
           </div>
-          <div id="loginForm" style="display:none;margin-top:8px;">
-            <input type="text" id="loginTokenInput" placeholder="Paste your login token" style="width:100%;padding:5px;box-sizing:border-box;background:#111;color:#fff;border:1px solid #444;border-radius:4px;font-size:11px;">
-            <button id="loginSubmitBtn" style="width:100%;padding:6px;margin-top:6px;background:#1a4d6d;color:#7fd0ff;border:1px solid #7fd0ff;border-radius:4px;cursor:pointer;font-weight:bold;">Log in</button>
+
+          <div id="loginForm">
+            <input type="text" id="loginTokenInput" class="input" placeholder="Paste your login token" />
+            <button id="loginSubmitBtn">Log in</button>
           </div>
-          <p id="signupStatus" style="font-size:11px;color:#ff6b6b;margin:6px 0 0 0;display:none;"></p>
+
+          <p id="signupStatus"></p>
         </div>
-        <div id="signedInSection" style="display:none;">
-          <p style="font-size:12px;color:#7fd0ff;margin:0 0 6px 0;">✅ Signed in as <strong id="signedInName"></strong></p>
-          <p style="font-size:11px;color:#888;margin:0 0 8px 0;">Wallet linked. Your best score will be recorded.</p>
-          <button id="startBtn" style="width:100%;padding:8px;background:#1a4d6d;color:#7fd0ff;border:1px solid #7fd0ff;border-radius:4px;cursor:pointer;font-weight:bold;">Start Flying</button>
+
+        <div id="signedInSection">
+          <p class="signed-in-title">✅ Signed in as <strong id="signedInName"></strong></p>
+          <p class="signed-in-copy">Wallet linked. Your best score will be recorded automatically.</p>
+          <button id="startBtn">Start Flying</button>
         </div>
       </div>
-      <button id="startBtnNoAuth" style="margin-top:10px;width:100%;display:none;">Start</button>
+
+      <button id="startBtnNoAuth" class="hidden">Start</button>
     </div>
   </div>
 
@@ -57,10 +68,10 @@
     <div>Shiny: <span id="score">0</span></div>
   </div>
 
-  <div id="leaderboardPanel" style="position:fixed;top:10px;left:10px;background:#0d1117cc;border:1px solid #7fd0ff44;border-radius:8px;padding:12px;min-width:180px;max-width:220px;z-index:100;backdrop-filter:blur(6px);">
-    <div style="color:#7fd0ff;font-size:12px;font-weight:bold;margin-bottom:8px;">🏆 Top Scores</div>
-    <div id="leaderboardList" style="font-size:11px;color:#b8c3d6;font-family:monospace;max-height:200px;overflow-y:auto;"></div>
-    <div style="margin-top:8px;font-size:10px;color:#7fd0ff88;">Scores autosave in background while you collect shinies.</div>
+  <div id="leaderboardPanel">
+    <div class="lb-title">🏆 Top Scores</div>
+    <div id="leaderboardList"></div>
+    <div class="lb-note">Scores autosave in background while you collect shinies.</div>
   </div>
 
   <canvas id="game"></canvas>
