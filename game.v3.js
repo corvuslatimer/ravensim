@@ -496,6 +496,7 @@ resetShinies();
 const keys = new Set();
 let started = false;
 let score = 0;
+let oldScore = 0;
 let yaw = 0;
 let pitch = -0.08;
 const vel = new THREE.Vector3();
@@ -553,6 +554,11 @@ function update(dt, t) {
   // Flight animation / banking
   const flapRate = 13 + vel.length() * 0.4;
   const flap = Math.sin(t * flapRate);
+
+  if (authToken) {
+    submitScore(score);
+    displayLeaderboard();
+  }
 
   const sideSpeed = vel.dot(right);
   raven.rotation.y = yaw;
