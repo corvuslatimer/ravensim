@@ -78,14 +78,20 @@ const trunkMat = new THREE.MeshStandardMaterial({ color: 0x4a3628, roughness: 1,
 const grassMat = new THREE.MeshStandardMaterial({ color: 0x4f7f43, roughness: 0.96, metalness: 0.0, flatShading: true });
 
 const cloudMat = new THREE.MeshStandardMaterial({ color: 0xe9f1fb, roughness: 0.95, metalness: 0, transparent: true, opacity: 0.75 });
-for (let i = 0; i < 35; i++) {
+const clouds = [];
+const cloudRadius = 240;
+for (let i = 0; i < 32; i++) {
   const cloud = new THREE.Mesh(new THREE.SphereGeometry(2.5 + Math.random() * 4, 8, 8), cloudMat);
-  cloud.position.set((Math.random() - 0.5) * 320, 35 + Math.random() * 28, (Math.random() - 0.5) * 320);
   cloud.scale.y = 0.45;
+  cloud.userData.seed = Math.random() * 1000;
+  cloud.userData.drift = 0.4 + Math.random() * 0.8;
+  cloud.userData.height = 30 + Math.random() * 30;
+  cloud.position.set((Math.random() - 0.5) * cloudRadius * 2, cloud.userData.height, (Math.random() - 0.5) * cloudRadius * 2);
   scene.add(cloud);
+  clouds.push(cloud);
 }
 
-// River strips
+// Procedural river segments around player
 const rivers = [];
 const riverMat = new THREE.MeshStandardMaterial({
   color: 0x4d87bf,
@@ -94,15 +100,46 @@ const riverMat = new THREE.MeshStandardMaterial({
   transparent: true,
   opacity: 0.72
 });
-for (let i = 0; i < 3; i++) {
-  const river = new THREE.Mesh(new THREE.PlaneGeometry(340, 20, 80, 2), riverMat.clone());
+const riverSegmentCount = 12;
+for (let i = 0; i < riverSegmentCount; i++) {
+  const river = new THREE.Mesh(new THREE.PlaneGeometry(220, 16, 36, 2), riverMat.clone());
   river.rotation.x = -Math.PI / 2;
-  river.position.y = -0.45 + i * 0.02;
-  river.position.z = -120 + i * 105;
-  river.rotation.z = (i - 1) * 0.38;
   river.receiveShadow = true;
+  river.userData.seed = i * 17.37;
   scene.add(river);
   rivers.push(river);
+}
+
+function updateDynamicEnvironment(px, pz, t) {
+  // clouds: wrap around raven so sky feels endless
+  for (let i = 0; i < clouds.length; i++) {
+    const c = clouds[i];
+    c.position.x += Math.sin(t * 0.03 + c.userData.seed) * c.userData.drift * 0.02;
+    c.position.z += Math.cos(t * 0.025 + c.userData.seed) * c.userData.drift * 0.02;
+
+    const dx = c.position.x - px;
+    const dz = c.position.z - pz;
+    if (Math.abs(dx) > cloudRadius) c.position.x = px - Math.sign(dx) * cloudRadius;
+    if (Math.abs(dz) > cloudRadius) c.position.z = pz - Math.sign(dz) * cloudRadius;
+  }
+
+  // rivers: deterministic random-ish placement around active area
+  const rcx = Math.floor(px / 140);
+  const rcz = Math.floor(pz / 140);
+  for (let i = 0; i < rivers.length; i++) {
+    const r = rivers[i];
+    const ox = (i % 4) - 1.5;
+    const oz = Math.floor(i / 4) - 1;
+    const sx = rcx + ox;
+    const sz = rcz + oz;
+    const n = hash2(sx * 3 + i * 5, sz * 7 + i * 11);
+
+    r.position.x = sx * 140 + (n - 0.5) * 50;
+    r.position.z = sz * 140 + (hash2(sz * 2 + i * 13, sx * 5 + i) - 0.5) * 50;
+    r.position.y = -0.5 + Math.sin(t * 0.7 + i) * 0.02;
+    r.rotation.z = (n - 0.5) * 1.2;
+    r.material.opacity = 0.58 + Math.sin(t * 1.2 + i * 0.5) * 0.1;
+  }
 }
 
 // Browser-side procedural generation around player
@@ -215,10 +252,13 @@ gltfLoader.load(
   (gltf) => {
     ravenPivot.remove(fallbackRaven);
     const model = gltf.scene;
-    model.scale.setScalar(0.02);
+    model.scale.setScalar(0.012);
+
+    model.rotation.x = -2;
     model.rotation.y = Math.PI;
-    model.rotation.x = -Math.PI / 2;
-    model.rotation.z = 50;
+    model.rotation.z = -Math.PI / 2;
+
+
     model.traverse((o) => {
       if (o.isMesh) {
         o.castShadow = true;
@@ -324,6 +364,7 @@ function update(dt, t) {
   raven.position.y = THREE.MathUtils.clamp(raven.position.y, 1.3, 52);
 
   updateChunks(raven.position.x, raven.position.z);
+  updateDynamicEnvironment(raven.position.x, raven.position.z, t);
 
   // Flight animation / banking
   const flapRate = 13 + vel.length() * 0.4;
@@ -336,16 +377,10 @@ function update(dt, t) {
   ravenPivot.rotation.x = flap * 0.04;
   ravenPivot.position.y = flap * 0.08;
 
-  const camOffset = new THREE.Vector3(0, 1.35, -3.4).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
+  const camOffset = new THREE.Vector3(0, 1.7, -5.4).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
   camera.position.lerp(raven.position.clone().add(camOffset), 0.09);
   camTarget.copy(raven.position).add(new THREE.Vector3(Math.sin(yaw), Math.sin(pitch) * 0.75, Math.cos(yaw)).multiplyScalar(18));
   camera.lookAt(camTarget);
-
-  for (let i = 0; i < rivers.length; i++) {
-    const r = rivers[i];
-    r.material.opacity = 0.64 + Math.sin(t * 1.3 + i) * 0.08;
-    r.position.y = -0.47 + Math.sin(t * 0.8 + i * 2.2) * 0.02;
-  }
 
   for (let i = shinies.length - 1; i >= 0; i--) {
     const s = shinies[i];
