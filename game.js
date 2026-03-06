@@ -34,6 +34,20 @@ sun.shadow.camera.top = 90;
 sun.shadow.camera.bottom = -90;
 scene.add(sun);
 
+const sunDisk = new THREE.Mesh(
+  new THREE.SphereGeometry(10, 20, 20),
+  new THREE.MeshBasicMaterial({ color: 0xffe9b0 })
+);
+sunDisk.position.copy(sun.position).multiplyScalar(6.5);
+scene.add(sunDisk);
+
+const sunHalo = new THREE.Mesh(
+  new THREE.SphereGeometry(15, 16, 16),
+  new THREE.MeshBasicMaterial({ color: 0xffd98a, transparent: true, opacity: 0.18 })
+);
+sunHalo.position.copy(sunDisk.position);
+scene.add(sunHalo);
+
 const skyDome = new THREE.Mesh(
   new THREE.SphereGeometry(700, 32, 20),
   new THREE.MeshBasicMaterial({ color: 0xaec7e2, side: THREE.BackSide })
@@ -87,6 +101,46 @@ for (let i = 0; i < 35; i++) {
   cloud.scale.y = 0.45;
   scene.add(cloud);
 }
+
+// River strips
+const rivers = [];
+const riverMat = new THREE.MeshStandardMaterial({
+  color: 0x4d87bf,
+  roughness: 0.18,
+  metalness: 0.08,
+  transparent: true,
+  opacity: 0.72
+});
+for (let i = 0; i < 3; i++) {
+  const river = new THREE.Mesh(new THREE.PlaneGeometry(340, 20, 80, 2), riverMat.clone());
+  river.rotation.x = -Math.PI / 2;
+  river.position.y = -0.45 + i * 0.02;
+  river.position.z = -120 + i * 105;
+  river.rotation.z = (i - 1) * 0.38;
+  river.receiveShadow = true;
+  scene.add(river);
+  rivers.push(river);
+}
+
+// Grass clumps (instanced for perf)
+const grassMat = new THREE.MeshStandardMaterial({ color: 0x4f7f43, roughness: 0.96, metalness: 0.0, flatShading: true });
+const grassGeo = new THREE.ConeGeometry(0.18, 1.2, 3);
+const grassCount = 1800;
+const grass = new THREE.InstancedMesh(grassGeo, grassMat, grassCount);
+const gObj = new THREE.Object3D();
+for (let i = 0; i < grassCount; i++) {
+  const gx = (Math.random() - 0.5) * 360;
+  const gz = (Math.random() - 0.5) * 360;
+  gObj.position.set(gx, -0.8, gz);
+  gObj.rotation.y = Math.random() * Math.PI;
+  const s = 0.6 + Math.random() * 0.9;
+  gObj.scale.set(1, s, 1);
+  gObj.updateMatrix();
+  grass.setMatrixAt(i, gObj.matrix);
+}
+grass.castShadow = true;
+grass.receiveShadow = true;
+scene.add(grass);
 
 // Stylized raven model (clean silhouette)
 const raven = new THREE.Group();
@@ -249,6 +303,12 @@ function update(dt, t) {
   camera.position.lerp(raven.position.clone().add(camOffset), 0.09);
   camTarget.copy(raven.position).add(new THREE.Vector3(Math.sin(yaw), Math.sin(pitch) * 0.75, Math.cos(yaw)).multiplyScalar(18));
   camera.lookAt(camTarget);
+
+  for (let i = 0; i < rivers.length; i++) {
+    const r = rivers[i];
+    r.material.opacity = 0.64 + Math.sin(t * 1.3 + i) * 0.08;
+    r.position.y = -0.47 + Math.sin(t * 0.8 + i * 2.2) * 0.02;
+  }
 
   for (let i = shinies.length - 1; i >= 0; i--) {
     const s = shinies[i];
