@@ -9,35 +9,83 @@ const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.02;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x91aeca);
-scene.fog = new THREE.Fog(0x91aeca, 40, 220);
+scene.background = new THREE.Color(0x8ba7c4);
+scene.fog = new THREE.Fog(0x8ba7c4, 45, 260);
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1200);
 camera.position.set(0, 4, 12);
 
-scene.add(new THREE.HemisphereLight(0xcbe1ff, 0x2b3c2f, 1.2));
-const sun = new THREE.DirectionalLight(0xffffff, 0.85);
-sun.position.set(30, 45, -10);
+scene.add(new THREE.HemisphereLight(0xcfe3ff, 0x2b3c2f, 1.25));
+const sun = new THREE.DirectionalLight(0xfff6de, 1.05);
+sun.position.set(34, 50, -14);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.near = 1;
+sun.shadow.camera.far = 180;
+sun.shadow.camera.left = -90;
+sun.shadow.camera.right = 90;
+sun.shadow.camera.top = 90;
+sun.shadow.camera.bottom = -90;
 scene.add(sun);
 
+const skyDome = new THREE.Mesh(
+  new THREE.SphereGeometry(700, 32, 20),
+  new THREE.MeshBasicMaterial({ color: 0xaec7e2, side: THREE.BackSide })
+);
+scene.add(skyDome);
+
+const groundGeo = new THREE.PlaneGeometry(900, 900, 140, 140);
+const gp = groundGeo.attributes.position;
+for (let i = 0; i < gp.count; i++) {
+  const x = gp.getX(i);
+  const y = gp.getY(i);
+  const h = Math.sin(x * 0.012) * 0.9 + Math.cos(y * 0.014) * 0.7 + (Math.random() - 0.5) * 0.18;
+  gp.setZ(i, h);
+}
+groundGeo.computeVertexNormals();
 const ground = new THREE.Mesh(
-  new THREE.PlaneGeometry(900, 900, 20, 20),
-  new THREE.MeshStandardMaterial({ color: 0x314c3a, roughness: 0.95, metalness: 0.0 })
+  groundGeo,
+  new THREE.MeshStandardMaterial({ color: 0x314c3a, roughness: 0.97, metalness: 0.0 })
 );
 ground.rotation.x = -Math.PI / 2;
 ground.position.y = -1.2;
+ground.receiveShadow = true;
 scene.add(ground);
 
-const treeMat = new THREE.MeshStandardMaterial({ color: 0x1f2e1f, roughness: 1 });
-for (let i = 0; i < 180; i++) {
+const treeMat = new THREE.MeshStandardMaterial({ color: 0x243724, roughness: 1, flatShading: true });
+const trunkMat = new THREE.MeshStandardMaterial({ color: 0x4a3628, roughness: 1, flatShading: true });
+for (let i = 0; i < 220; i++) {
   const h = 3 + Math.random() * 10;
-  const tree = new THREE.Mesh(new THREE.ConeGeometry(0.8 + h * 0.16, h, 6), treeMat);
   const angle = Math.random() * Math.PI * 2;
   const dist = 20 + Math.random() * 330;
-  tree.position.set(Math.cos(angle) * dist, h * 0.5 - 1.2, Math.sin(angle) * dist);
-  scene.add(tree);
+  const x = Math.cos(angle) * dist;
+  const z = Math.sin(angle) * dist;
+
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.18, h * 0.45, 6), trunkMat);
+  trunk.position.set(x, h * 0.225 - 1.2, z);
+  trunk.castShadow = true;
+  trunk.receiveShadow = true;
+  scene.add(trunk);
+
+  const crown = new THREE.Mesh(new THREE.ConeGeometry(0.8 + h * 0.16, h, 6), treeMat);
+  crown.position.set(x, h * 0.5 - 1.2, z);
+  crown.castShadow = true;
+  crown.receiveShadow = true;
+  scene.add(crown);
+}
+
+const cloudMat = new THREE.MeshStandardMaterial({ color: 0xe9f1fb, roughness: 0.95, metalness: 0, transparent: true, opacity: 0.75 });
+for (let i = 0; i < 35; i++) {
+  const cloud = new THREE.Mesh(new THREE.SphereGeometry(2.5 + Math.random() * 4, 8, 8), cloudMat);
+  cloud.position.set((Math.random() - 0.5) * 320, 35 + Math.random() * 28, (Math.random() - 0.5) * 320);
+  cloud.scale.y = 0.45;
+  scene.add(cloud);
 }
 
 // Stylized raven model (clean silhouette)
@@ -93,6 +141,12 @@ wingR.rotation.y = 0.35;
 raven.add(wingL, wingR);
 
 raven.position.set(0, 5, 0);
+raven.traverse((o) => {
+  if (o.isMesh) {
+    o.castShadow = true;
+    o.receiveShadow = true;
+  }
+});
 scene.add(raven);
 
 // pickups
@@ -100,8 +154,8 @@ const shinies = [];
 const shinyGeo = new THREE.IcosahedronGeometry(0.24, 0);
 const shinyMat = new THREE.MeshStandardMaterial({
   color: 0xffdf6a,
-  emissive: 0x9a7b1f,
-  emissiveIntensity: 0.85,
+  emissive: 0x7a5f19,
+  emissiveIntensity: 0.52,
   metalness: 0.72,
   roughness: 0.2
 });
@@ -109,6 +163,7 @@ const shinyMat = new THREE.MeshStandardMaterial({
 function spawnShiny() {
   const m = new THREE.Mesh(shinyGeo, shinyMat);
   m.position.set((Math.random() - 0.5) * 180, 1.8 + Math.random() * 30, (Math.random() - 0.5) * 180);
+  m.castShadow = true;
   scene.add(m);
   shinies.push(m);
 }
