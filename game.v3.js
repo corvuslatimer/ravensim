@@ -55,23 +55,7 @@ const skyDome = new THREE.Mesh(
 );
 scene.add(skyDome);
 
-const groundGeo = new THREE.PlaneGeometry(900, 900, 140, 140);
-const gp = groundGeo.attributes.position;
-for (let i = 0; i < gp.count; i++) {
-  const x = gp.getX(i);
-  const y = gp.getY(i);
-  const h = Math.sin(x * 0.012) * 0.9 + Math.cos(y * 0.014) * 0.7 + (Math.random() - 0.5) * 0.18;
-  gp.setZ(i, h);
-}
-groundGeo.computeVertexNormals();
-const ground = new THREE.Mesh(
-  groundGeo,
-  new THREE.MeshStandardMaterial({ color: 0x314c3a, roughness: 0.97, metalness: 0.0 })
-);
-ground.rotation.x = -Math.PI / 2;
-ground.position.y = -1.2;
-ground.receiveShadow = true;
-scene.add(ground);
+const groundMat = new THREE.MeshStandardMaterial({ color: 0x314c3a, roughness: 0.97, metalness: 0.0, flatShading: true });
 
 const treeMat = new THREE.MeshStandardMaterial({ color: 0x243724, roughness: 1, flatShading: true });
 const trunkMat = new THREE.MeshStandardMaterial({ color: 0x4a3628, roughness: 1, flatShading: true });
@@ -149,7 +133,8 @@ const chunkMap = new Map();
 const procGeo = {
   trunk: new THREE.CylinderGeometry(0.12, 0.18, 1, 6),
   crown: new THREE.ConeGeometry(1, 1, 6),
-  grass: new THREE.ConeGeometry(0.18, 1.2, 3)
+  grass: new THREE.ConeGeometry(0.18, 1.2, 3),
+  ground: new THREE.PlaneGeometry(chunkSize, chunkSize, 24, 24)
 };
 
 function hash2(x, z) {
@@ -163,6 +148,24 @@ function makeChunk(cx, cz) {
   group.userData.cz = cz;
   const baseX = cx * chunkSize;
   const baseZ = cz * chunkSize;
+
+  // Per-chunk terrain tile (browser-generated, stream in/out)
+  const g = procGeo.ground.clone();
+  const ap = g.attributes.position;
+  for (let i = 0; i < ap.count; i++) {
+    const lx = ap.getX(i);
+    const lz = ap.getY(i);
+    const wx = baseX + lx;
+    const wz = baseZ + lz;
+    const h = Math.sin(wx * 0.012) * 0.9 + Math.cos(wz * 0.014) * 0.7 + hash2(wx * 0.13, wz * 0.17) * 0.18;
+    ap.setZ(i, h);
+  }
+  g.computeVertexNormals();
+  const groundTile = new THREE.Mesh(g, groundMat);
+  groundTile.rotation.x = -Math.PI / 2;
+  groundTile.position.set(baseX, -1.2, baseZ);
+  groundTile.receiveShadow = true;
+  group.add(groundTile);
 
   const treeCount = 8 + Math.floor(hash2(cx, cz) * 10);
   for (let i = 0; i < treeCount; i++) {
