@@ -516,6 +516,81 @@ const camTarget = new THREE.Vector3();
 window.addEventListener('keydown', e => keys.add(e.key.toLowerCase()));
 window.addEventListener('keyup', e => keys.delete(e.key.toLowerCase()));
 
+// ── Mobile touch controls ──
+const joystickZone = document.getElementById('joystickZone');
+const joystickThumb = document.getElementById('joystickThumb');
+const btnUp = document.getElementById('btnUp');
+const btnDown = document.getElementById('btnDown');
+
+let joyActive = false, joyId = null, joyOrigin = {x:0,y:0};
+const joyRadius = 40;
+
+joystickZone.addEventListener('touchstart', e => {
+  e.preventDefault();
+  const t = e.changedTouches[0];
+  const r = joystickZone.getBoundingClientRect();
+  joyOrigin = { x: r.left + r.width/2, y: r.top + r.height/2 };
+  joyId = t.identifier;
+  joyActive = true;
+}, { passive: false });
+
+joystickZone.addEventListener('touchmove', e => {
+  e.preventDefault();
+  for (const t of e.changedTouches) {
+    if (t.identifier !== joyId) continue;
+    const dx = t.clientX - joyOrigin.x;
+    const dy = t.clientY - joyOrigin.y;
+    const dist = Math.min(Math.sqrt(dx*dx+dy*dy), joyRadius);
+    const angle = Math.atan2(dy, dx);
+    joystickThumb.style.transform = `translate(calc(-50% + ${Math.cos(angle)*dist}px), calc(-50% + ${Math.sin(angle)*dist}px))`;
+    // map to keys
+    const nx = dx / joyRadius, ny = dy / joyRadius;
+    nx > 0.3 ? keys.add('d') : keys.delete('d');
+    nx < -0.3 ? keys.add('a') : keys.delete('a');
+    ny < -0.3 ? keys.add('w') : keys.delete('w');
+    ny > 0.3 ? keys.add('s') : keys.delete('s');
+  }
+}, { passive: false });
+
+const clearJoy = e => {
+  for (const t of e.changedTouches) {
+    if (t.identifier !== joyId) continue;
+    joyActive = false;
+    joystickThumb.style.transform = 'translate(-50%, -50%)';
+    ['w','a','s','d'].forEach(k => keys.delete(k));
+  }
+};
+joystickZone.addEventListener('touchend', clearJoy);
+joystickZone.addEventListener('touchcancel', clearJoy);
+
+btnUp.addEventListener('touchstart', e => { e.preventDefault(); keys.add(' '); }, { passive: false });
+btnUp.addEventListener('touchend', () => keys.delete(' '));
+btnDown.addEventListener('touchstart', e => { e.preventDefault(); keys.add('shift'); }, { passive: false });
+btnDown.addEventListener('touchend', () => keys.delete('shift'));
+
+// Touch look (swipe anywhere outside joystick)
+let lookId = null, lastLook = {x:0,y:0};
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  if (!started) return;
+  const t = e.changedTouches[0];
+  lookId = t.identifier;
+  lastLook = { x: t.clientX, y: t.clientY };
+}, { passive: false });
+
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  for (const t of e.changedTouches) {
+    if (t.identifier !== lookId) continue;
+    const dx = t.clientX - lastLook.x;
+    const dy = t.clientY - lastLook.y;
+    yaw -= dx * 0.004;
+    pitch -= dy * 0.003;
+    pitch = Math.max(-1.1, Math.min(1.1, pitch));
+    lastLook = { x: t.clientX, y: t.clientY };
+  }
+}, { passive: false });
+
 function setPointerLock() {
   if (document.pointerLockElement !== canvas) canvas.requestPointerLock();
 }

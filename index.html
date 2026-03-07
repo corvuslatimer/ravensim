@@ -13,11 +13,11 @@
       <p>Fly through a mellow world, collect shinies, vibe.</p>
 
       <ul>
-        <li>WASD: move</li>
-        <li>Space / Shift: up / down</li>
+        <li>WASD / joystick: move</li>
+        <li>Space / Shift / ▲▼: up / down</li>
         <li>Q: glide boost</li>
-        <li>Mouse: look around</li>
-        <li>Click: lock cursor + start</li>
+        <li>Mouse / swipe: look around</li>
+        <li>Click / tap: start</li>
       </ul>
 
       <p>
@@ -75,6 +75,19 @@
   </div>
 
   <canvas id="game"></canvas>
+
+  <!-- Mobile touch controls -->
+  <div id="mobileControls">
+    <div id="joystickZone">
+      <div id="joystickBase">
+        <div id="joystickThumb"></div>
+      </div>
+    </div>
+    <div id="altButtons">
+      <button id="btnUp">▲</button>
+      <button id="btnDown">▼</button>
+    </div>
+  </div>
 
   <script type="module" src="game.v3.js"></script>
 </body>

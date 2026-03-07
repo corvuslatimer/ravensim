@@ -242,3 +242,73 @@ button.btn-subtle {
   color: rgba(127, 208, 255, 0.6);
   line-height: 1.35;
 }
+
+/* ───── Mobile Touch Controls ───── */
+#mobileControls {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 180px;
+  z-index: 200;
+  pointer-events: none;
+}
+
+#joystickZone {
+  position: absolute;
+  bottom: 20px;
+  left: 24px;
+  width: 120px;
+  height: 120px;
+  pointer-events: all;
+}
+
+#joystickBase {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  border: 2px solid rgba(255,255,255,0.18);
+  position: relative;
+}
+
+#joystickThumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(127,208,255,0.55);
+  border: 2px solid rgba(127,208,255,0.9);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transition: none;
+}
+
+#altButtons {
+  position: absolute;
+  bottom: 20px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: all;
+}
+
+#altButtons button {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  border: 2px solid rgba(255,255,255,0.22);
+  color: #fff;
+  font-size: 1.2rem;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (pointer: coarse) {
+  #mobileControls { display: block; }
+  #leaderboardPanel { max-width: 160px; font-size: 10px; }
+}
