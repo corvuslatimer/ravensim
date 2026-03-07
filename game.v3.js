@@ -516,6 +516,22 @@ const camTarget = new THREE.Vector3();
 window.addEventListener('keydown', e => keys.add(e.key.toLowerCase()));
 window.addEventListener('keyup', e => keys.delete(e.key.toLowerCase()));
 
+// ── Fullscreen button ──
+const fullscreenBtn = document.getElementById('fullscreenBtn');
+fullscreenBtn.addEventListener('click', () => {
+  const el = document.documentElement;
+  if (!document.fullscreenElement) {
+    (el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen).call(el);
+    fullscreenBtn.textContent = '✕';
+  } else {
+    (document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen).call(document);
+    fullscreenBtn.textContent = '⛶';
+  }
+});
+document.addEventListener('fullscreenchange', () => {
+  if (!document.fullscreenElement) fullscreenBtn.textContent = '⛶';
+});
+
 // ── Mobile touch controls ──
 const joystickZone = document.getElementById('joystickZone');
 const joystickThumb = document.getElementById('joystickThumb');
